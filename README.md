@@ -8,7 +8,7 @@
 
 | 路徑 | 內容 |
 |---|---|
-| `app/red-pen-notebook.html` | 原版網頁（單一 HTML 檔），取自已發布的 artifact，版本 `1795400054-c4a1` |
+| `app/red-pen-notebook.html` | 主程式（單一 HTML 檔），與已發布的 artifact 一致，含匯出／匯入備份按鈕。最初的原版可在 git 歷史（commit c1cb8f7 之前）找到 |
 | `app/red-pen-notebook-grimoire.html` | 魔導書版（副本，另含第二個 `<script>`），版本 `1795447220-cd77` |
 | `docs/` | 專案文件：魔導書繼承文件、IELTS 紅筆筆記本與其魔法世界副本 |
 | `data/` | 資料庫匯出（見下方說明） |
@@ -22,7 +22,7 @@
 
 ## 注意
 
-- 原版 `red-pen-notebook.html` 是正式使用中的版本，修改請先在副本上試。
+- `red-pen-notebook.html` 是正式使用中的版本，修改請先在副本上試。
 - 資料庫的詞源庫（`etym`）有些條目是已核對來源的（`rv: 2`），有些還在待核對。
 
 ## data/ 目錄（你自己的學習資料）
@@ -41,7 +41,7 @@
 
 ## 完整備份（匯出按鈕）
 
-`app/red-pen-notebook-export.html` 是在原版上多「匯出備份 JSON」與「匯入備份 JSON」按鈕的版本（已同步到 artifact）。按下後會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/` 即可。`app/red-pen-notebook.html` 保持原版。
+`app/red-pen-notebook.html` 內建「匯出備份 JSON」與「匯入備份 JSON」按鈕。匯出會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/backup/` 即可；匯入則選擇備份檔還原。
 
 ## 完整備份檔
 
