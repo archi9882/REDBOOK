@@ -186,7 +186,7 @@ form textarea{min-height:110px;margin-top:0;font-size:15px;line-height:1.6}
 <div class="wrap">
   <header>
     <h1>紅筆<span>英文本</span></h1>
-    <div class="prog"><div id="progText">已掌握 0 / 0</div><div class="bar"><i id="progBar"></i></div><button id="bkBtn" type="button" style="margin-top:6px;font-size:12px;padding:3px 10px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">匯出備份 JSON</button></div>
+    <div class="prog"><div id="progText">已掌握 0 / 0</div><div class="bar"><i id="progBar"></i></div><button id="bkBtn" type="button" style="margin-top:6px;font-size:12px;padding:3px 10px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">匯出備份 JSON</button><button id="imBtn" type="button" style="margin:6px 0 0 6px;font-size:12px;padding:3px 10px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">匯入備份 JSON</button><input id="imFile" type="file" accept=".json,application/json" style="display:none"></div>
   </header>
   <nav role="tablist" aria-label="功能">
     <button role="tab" id="t-today" aria-selected="true" data-g="today">今日</button>
@@ -2193,6 +2193,34 @@ window.addEventListener('resize',function(){if(cur==='graph')gDraw()});
       }
     }catch(e){btn.textContent='匯出失敗：'+(e&&e.message?e.message:e)}
     btn.disabled=false;
+  });
+})();
+</script>
+<script>
+(function(){
+  var b=document.getElementById('imBtn'),f=document.getElementById('imFile');if(!b||!f)return;
+  b.addEventListener('click',function(){if(!window.__rpDb){b.textContent='資料庫尚未連線';return}f.value='';f.click()});
+  f.addEventListener('change',async function(){
+    var file=f.files&&f.files[0];if(!file)return;
+    var db=window.__rpDb;if(!db){b.textContent='資料庫尚未連線';return}
+    try{
+      var o=JSON.parse(await file.text());
+      var cols=o&&o.collections;if(!cols)throw new Error('不是備份檔');
+      var names=Object.keys(cols),total=0;names.forEach(function(n){total+=cols[n].length});
+      if(!confirm('將匯入 '+total+' 筆資料，並覆蓋同名資料。確定嗎？'))return;
+      b.disabled=true;var done=0,fail=0;
+      for(var i=0;i<names.length;i++){
+        var arr=cols[names[i]];
+        for(var j=0;j<arr.length;j+=15){
+          await Promise.all(arr.slice(j,j+15).map(function(x){return db.doc(names[i]+'/'+x.id).set(x.data).then(function(){done++},function(){fail++})}));
+          b.textContent='匯入中 '+(done+fail)+' / '+total;
+        }
+      }
+      try{localStorage.setItem('rp-seeded','1');localStorage.removeItem('rp-ts')}catch(e){}
+      b.textContent='完成：成功 '+done+'、失敗 '+fail+(fail?'（etym 需擁有者權限）':'')+'，重新載入…';
+      setTimeout(function(){location.reload()},1500);
+    }catch(e){b.textContent='匯入失敗：'+(e&&e.message?e.message:e)}
+    b.disabled=false;
   });
 })();
 </script>

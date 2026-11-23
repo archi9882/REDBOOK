@@ -41,7 +41,7 @@
 
 ## 完整備份（匯出按鈕）
 
-`app/red-pen-notebook-export.html` 是在原版上多一顆「匯出備份 JSON」按鈕的版本（已同步到 artifact）。按下後會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/` 即可。`app/red-pen-notebook.html` 保持原版。
+`app/red-pen-notebook-export.html` 是在原版上多「匯出備份 JSON」與「匯入備份 JSON」按鈕的版本（已同步到 artifact）。按下後會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/` 即可。`app/red-pen-notebook.html` 保持原版。
 
 ## 完整備份檔
 
