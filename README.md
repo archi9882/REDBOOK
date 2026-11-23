@@ -9,16 +9,15 @@
 | 路徑 | 內容 |
 |---|---|
 | `app/red-pen-notebook.html` | 主程式（單一 HTML 檔），與已發布的 artifact 一致，含匯出／匯入備份按鈕。最初的原版可在 git 歷史（commit c1cb8f7 之前）找到 |
-| `app/red-pen-notebook-grimoire.html` | 魔導書版（副本，另含第二個 `<script>`），版本 `1795447220-cd77` |
-| `docs/` | 專案文件：魔導書繼承文件、IELTS 紅筆筆記本與其魔法世界副本 |
+| `app/red-pen-notebook-blank.html` | 空白版（無個人資料，含匯入按鈕，可轉移） |
+| `docs/` | 專案文件：IELTS 紅筆筆記本 |
 | `data/` | 資料庫匯出（見下方說明） |
 
-## 兩個網頁的來源
+## 網頁來源
 
-- 原版：<https://claude.ai/artifact/B5TVBUfN5jWHZudUXRwN8b>（slug `519aaf26-5c9d-4ffe-988f-5052ed327b1c`）
-- 魔導書版：<https://claude.ai/artifact/BWtrYz5HQTNzmGYvnF45y8>（slug `5527e98c-751f-44bd-bce7-bf119a79d77f`）
+- 紅筆英文本：<https://claude.ai/artifact/B5TVBUfN5jWHZudUXRwN8b>（slug `519aaf26-5c9d-4ffe-988f-5052ed327b1c`）
 
-兩個頁面是單檔 HTML。**在 Claude 裡執行時**，資料同步到該 artifact 的資料庫（`state/u`、`etym`、`phr`、`rec`、`pending`、`col`）。**單獨在瀏覽器開啟時**沒有資料庫，進度只存在瀏覽器的 localStorage（鍵名以 `rp-` 開頭），也不會有每晚的自動補貨與核對。
+頁面是單檔 HTML。**在 Claude 裡執行時**，資料同步到該 artifact 的資料庫（`state/u`、`etym`、`phr`、`rec`、`pending`、`col`）。**單獨在瀏覽器開啟時**沒有資料庫，進度只存在瀏覽器的 localStorage（鍵名以 `rp-` 開頭），也不會有每晚的自動補貨與核對。
 
 ## 注意
 
