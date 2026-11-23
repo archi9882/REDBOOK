@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>紅筆英文本</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a ruled notebook page. Black pen = the plain phrase, red pen = the upgrade. */
+:root{
+  --paper:#fbfbf8; --paper2:#f0f0ea; --rule:#cdd6e3; --ink:#1d1f24; --ink2:#5b6270;
+  --red:#d42b2b; --red-bg:#fdeceb; --ok:#1f7a4d; --bad:#b4231f; --line:#dcdcd2;
+  --hand:"Caveat","Segoe Print","Bradley Hand",cursive;
+  --body:"IBM Plex Sans","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16181d; --paper2:#1f2229; --rule:#2c3644; --ink:#ecebe6; --ink2:#9aa1ad;
+    --red:#ff6b6b; --red-bg:#2e1c1f; --ok:#5fd19a; --bad:#ff8a85; --line:#2d3038; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16181d; --paper2:#1f2229; --rule:#2c3644; --ink:#ecebe6; --ink2:#9aa1ad;
+  --red:#ff6b6b; --red-bg:#2e1c1f; --ok:#5fd19a; --bad:#ff8a85; --line:#2d3038; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--body);-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 56px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font:700 34px/1 var(--hand);margin:0;color:var(--red);text-wrap:balance}
+h1 span{color:var(--ink)}
+.prog{font-size:13px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--line);border-radius:2px;margin-top:4px;width:110px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);width:0;transition:width .3s}
+nav{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:14px}
+nav button{flex:1;white-space:nowrap;background:none;border:0;border-bottom:3px solid transparent;padding:10px 6px;font:500 15px var(--body);color:var(--ink2);cursor:pointer}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.panel[hidden],#sub[hidden]{display:none}
+.count{font-size:13px;color:var(--ink2);margin-bottom:8px;font-variant-numeric:tabular-nums;display:flex;justify-content:space-between}
+.card{display:block;position:relative;width:100%;height:270px;padding:0;border:0;background:none;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:22px 24px;border:1px solid var(--line);border-radius:10px;
+  background:var(--paper2) repeating-linear-gradient(to bottom,transparent 0 35px,var(--rule) 35px 36px);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .5s;overflow:auto}
+.front{transform:perspective(900px) rotateY(0)}
+.back{transform:perspective(900px) rotateY(180deg)}
+.flipped .front{transform:perspective(900px) rotateY(-180deg)}
+.flipped .back{transform:perspective(900px) rotateY(0)}
+.tag{font-size:12px;font-weight:600;letter-spacing:.04em}
+.tag.ink{color:var(--ink2)} .tag.red{color:var(--red)}
+.big{font:700 38px/1.1 var(--hand);text-wrap:balance}
+.ink-t{color:var(--ink)} .red-t{color:var(--red)}
+.zh{font-size:17px;font-weight:500}
+.ex{font-size:15px;color:var(--ink2)}
+mark{background:none;color:var(--red);font-weight:600}
+.hint{font-size:12px;color:var(--ink2)}
+.bk{margin:10px 0;border:1px solid var(--line);border-radius:8px;background:var(--paper2)}
+.bk>summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font:700 24px/1 var(--hand);color:var(--red);list-style:none}
+.bk>summary::-webkit-details-marker{display:none}
+.bk>summary::before{content:'\25B8';font:12px var(--body);color:var(--ink2);margin-right:8px;display:inline-block;transition:transform .15s}
+.bk[open]>summary::before{transform:rotate(90deg)}
+.bk>summary b{flex:1}
+.bk[open]>summary{border-bottom:1px solid var(--line)}
+.bk>.wi,.bk>.item,.bk>.ser{margin:8px}
+.known{position:absolute;top:10px;right:12px;font-size:12px;color:var(--ok)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{flex:1 1 auto;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:500 15px var(--body);cursor:pointer}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.cta{width:100%;min-height:56px;font-size:17px;margin-bottom:4px}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-top:8px;min-height:48px;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:500 16px var(--body);cursor:pointer}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--paper))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--paper))}
+.q{font:700 32px/1.15 var(--hand);margin:6px 0 8px;text-wrap:balance}
+.fb{margin-top:14px;padding:12px 14px;border-left:3px solid var(--red);background:var(--red-bg);border-radius:0 8px 8px 0;font-size:15px}
+.fb b{color:var(--red)}
+.filter{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;color:var(--ink2)}
+.filter input{width:20px;height:20px;accent-color:var(--red)}
+.empty{padding:20px 0;color:var(--ink2)}
+.prompt{border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;padding:14px 16px;background:var(--paper2)}
+.prompt p{margin:0 0 6px}
+.prompt .req{font-size:14px;color:var(--ink2);margin:0}
+textarea{width:100%;min-height:210px;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:17px/1.7 var(--body);resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{padding:3px 10px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.chip.on{border-color:var(--red);background:var(--red-bg);color:var(--red);font-weight:600}
+.tgs{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tg{font-size:11px;padding:1px 8px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--ink2)}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-top:8px;font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.item .t{font-weight:600;color:var(--red)}
+.item .p{font-size:13px;color:var(--ink2)}
+.item .z{font-size:14px;grid-column:1}
+.item .e{font-size:14px;font-style:italic;color:var(--ink2);grid-column:1}
+.item .e.none{font-style:normal;opacity:.6}
+.sib{display:block;font-size:13px;color:var(--ink2);margin-top:6px}
+.item .sib,.item .tgs,.item .ipa{grid-column:1}
+.item .pd{grid-column:1;font-size:13px;color:var(--ink2)}
+.pd summary{cursor:pointer;min-height:28px}
+.pd span{display:block;margin-top:4px}
+.ipa{font-size:13px;color:var(--ink2)}
+.item button{grid-row:1 / span 5;grid-column:2;align-self:center;background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink2);min-height:36px;padding:0 10px;cursor:pointer;font:13px var(--body)}
+.ser{border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;padding:2px 12px;margin:12px 0;background:var(--paper2)}
+.ser-h{font-size:13px;font-weight:600;padding:8px 0 0;color:var(--red)}
+.ser .item:last-child{border-bottom:0}
+form{display:grid;gap:10px;margin-bottom:22px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--paper2)}
+form h2,.list-h{font:700 24px var(--hand);margin:0}
+label{display:grid;gap:4px;font-size:13px;color:var(--ink2)}
+input[type=text]{min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:16px var(--body);width:100%}
+select{min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:16px var(--body);width:100%}
+.ibform{display:flex;gap:8px;margin-bottom:14px}
+.ib{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;background:var(--paper)}
+.ib-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.ib-p{font:700 24px/1.2 var(--hand);color:var(--ink);overflow-wrap:anywhere}
+.ib-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.btn.sm{min-height:40px;padding:0 14px;font-size:14px;flex:0 0 auto}
+.sug{display:grid;gap:3px;border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+.sug .st{font:700 24px/1.15 var(--hand);color:var(--red)}
+.sug .sm2{font-size:13px;color:var(--ink2)}
+.sug .btn{justify-self:start;margin-top:4px}
+.sm2{font-size:13px;color:var(--ink2)}
+.tr{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;background:var(--paper2)}
+.tr .w{font:700 30px/1.1 var(--hand);color:var(--red);overflow-wrap:anywhere}
+.tr .zz{font-size:16px;font-weight:600}
+.tr .dd{font-size:14px;color:var(--ink2)}
+.tr .row{margin-top:10px}
+.rv{position:relative;width:100%;height:330px}
+.rv.tall{height:420px}
+details.wi{border-bottom:1px solid var(--line);padding:6px 0}
+details.wi summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;min-height:40px}
+.wi-w{font:700 24px var(--hand);color:var(--red)}
+details.wi summary{flex-wrap:wrap}
+.gap-t{margin-left:auto;font-size:12px;color:var(--bad);border:1px solid var(--bad);border-radius:999px;padding:0 8px;white-space:nowrap}
+.ok-t{margin-left:auto;font-size:12px;color:var(--ok);white-space:nowrap}
+.mk{font-size:11px;color:var(--ink2);margin-left:3px}
+.wi-b{display:grid;gap:4px;padding:2px 0 8px;font-size:14px;color:var(--ink2)}
+.note{font-size:12px;color:var(--ink2);margin-top:18px}
+.pk{cursor:pointer;min-height:36px;background:var(--paper);font:13px var(--body)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 0 14px}
+.seg button{flex:1;min-height:40px;border:0;background:var(--paper);color:var(--ink2);font:500 14px var(--body);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--red);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--paper2)}
+.stat b{display:block;font:700 26px/1.1 var(--hand);color:var(--red);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink2)}
+.doc{border:1px solid var(--line);border-radius:10px;margin-top:12px;overflow:hidden}
+.doc-h{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--paper2);border-bottom:1px solid var(--line);font-size:13px}
+.doc-h span{color:var(--ink2)}
+.doc p{margin:0;padding:12px 14px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere}
+del{background:var(--red-bg);color:var(--red);text-decoration:line-through;border-radius:3px}
+ins{background:color-mix(in srgb,var(--ok) 16%,var(--paper));color:var(--ok);text-decoration:none;font-weight:500;border-radius:3px}
+.fb ul{margin:6px 0 0;padding-left:18px}
+details.add{margin-top:20px}
+details.add summary{cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center}
+form textarea{min-height:110px;margin-top:0;font-size:15px;line-height:1.6}
+.wrap.wide{max-width:980px}
+.gbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px;color:var(--ink2);margin-bottom:10px}
+.gbar label{display:inline-flex;gap:5px;align-items:center}
+.gbar select{min-height:36px;width:auto}
+#gbox{height:min(62vh,560px);min-height:360px;border:1px solid var(--line);border-radius:10px;background:var(--paper2);overflow:hidden}
+#gsvg{display:block;width:100%;height:100%;cursor:grab}
+.gn{cursor:pointer}
+.gn text{font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--paper2);stroke-width:3px;pointer-events:none}
+.gn.h text{font-weight:700;font-size:12px}
+.gring{display:none;fill:none;stroke:var(--ink);stroke-width:2}
+.gn.sel .gring{display:block}
+.gdim{opacity:.15}
+.gl{stroke:var(--ink2);stroke-opacity:.4}
+.gleg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--ink2)}
+.gleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.glg{cursor:pointer}
+.glg.on{color:var(--ink);font-weight:600;text-decoration:underline}
+.gfade{opacity:.12}
+.gbar input[type=range]{width:90px;accent-color:var(--red)}
+#gdetail{margin-top:12px}
+@media (prefers-reduced-motion:reduce){.face,.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>紅筆<span>英文本</span></h1>
+    <div class="prog"><div id="progText">已掌握 0 / 0</div><div class="bar"><i id="progBar"></i></div></div>
+  </header>
+  <nav role="tablist" aria-label="功能">
+    <button role="tab" id="t-today" aria-selected="true" data-g="today">今日</button>
+    <button role="tab" id="t-drill" aria-selected="false" data-g="drill">練習</button>
+    <button role="tab" id="t-write" aria-selected="false" data-g="write">寫作</button>
+    <button role="tab" id="t-lib" aria-selected="false" data-g="lib">收藏庫</button>
+  </nav>
+  <div id="sub" class="seg" role="group" aria-label="子分頁" hidden></div>
+  <section class="panel" id="p-today" role="tabpanel" aria-labelledby="t-today"></section>
+  <section class="panel" id="p-flash" role="tabpanel" hidden></section>
+  <section class="panel" id="p-quiz" role="tabpanel" hidden></section>
+  <section class="panel" id="p-essay" role="tabpanel" hidden></section>
+  <section class="panel" id="p-comp" role="tabpanel" hidden></section>
+  <section class="panel" id="p-deck" role="tabpanel" hidden></section>
+  <section class="panel" id="p-daily" role="tabpanel" hidden></section>
+  <section class="panel" id="p-inbox" role="tabpanel" hidden></section>
+  <section class="panel" id="p-graph" role="tabpanel" hidden></section>
+  <p class="note" id="syncNote">進度會存在這個瀏覽器；連上資料庫時也會同步備份，換裝置可以接續。</p>
+</div>
+<script>
+(function(){
+  var BASE=[
+    {t:'not trivial',z:'非同小可、不簡單',p:'Not simple and not easy',e:'Fixing this bug is not trivial.',m:'not trivial'},
+    {t:'with respect to',z:'關於',p:'regarding / about',e:'With respect to cost, we are fine.',m:'with respect to'},
+    {t:'around the clock',z:'全天候、日以繼夜',p:'working all day & night',e:'They worked around the clock.',m:'around the clock'},
+    {t:'take off',z:'迅速走紅、起飛',p:'become popular really quick',e:'The app took off overnight.',m:'(take|takes|took|taking|taken) off'},
+    {t:'ramp up',z:'加強、增加',p:'increasing activity',e:'We are ramping up production.',m:'ramp(s|ed|ing)? up'},
+    {t:'formidable',z:'強大而難應付的',p:'very strong',e:'She is a formidable opponent.',m:'formidable'},
+    {t:'throw a pity party',z:'自怨自艾',p:'feeling sorry for myself',e:'Stop throwing a pity party.',m:'pity party'},
+    {t:'manifest',z:'顯化、使實現',p:'make this happen',e:'She manifested her dream job.',m:'manifest'},
+    {t:'vibe out with',z:'與…放鬆相處',p:'feeling relax with / enjoy with',e:'I like to vibe out with my friends.',m:'vib(e|es|ed|ing) out with'},
+    {t:'show up for',z:'挺某人、為某人現身',p:'be there for sb.',e:'Show up for your friends.',m:'show(s|ed|ing)? up for'},
+    {t:'intrigued by',z:'被…勾起好奇心',p:'be so interested in',e:'I am intrigued by AI.',m:'intrigued by'},
+    {t:'tap into',z:'利用、挖掘',p:'use',e:'Tap into your creativity.',m:'tap(s|ped|ping)? into'},
+    {t:'you name it',z:'什麼都有、等等',p:'many other things',e:'Pizza, pasta, you name it.',m:'you name it'},
+    {t:'have an inkling',z:'隱約有感覺',p:'has a feeling',e:'I had an inkling he would quit.',m:'inkling'},
+    {t:'keep up with',z:'跟上',p:'follow',e:'Keep up with the trends.',m:'(keep|keeps|kept|keeping) up with'},
+    {t:'in broad daylight',z:'光天化日之下',p:'openly',e:'The shop was robbed in broad daylight.',m:'broad daylight'},
+    {t:'beat up on',z:'苛責、欺負',p:'put lot of pressure on',e:'Do not beat yourself up.',m:'beat(s|ing)? (\\w+ )?up( on)?|beat (myself|yourself|himself|herself|themselves) up'},
+    {t:'follow up on',z:'追蹤後續',p:'check again about',e:'I will follow up on the invoice tomorrow.',m:'follow(s|ed|ing)? up on',r:'商務'},
+    {t:'circle back',z:'稍後再回頭討論',p:'talk about it later',e:'Let us circle back after the meeting.',m:'circle(s|d)? back',r:'商務'},
+    {t:'touch base',z:'簡短聯繫、碰個頭',p:'contact you briefly',e:'I would like to touch base on the schedule.',m:'touch(es|ed|ing)? base',r:'商務'},
+    {t:'bandwidth',z:'餘裕、時間與精力',p:'I do not have time',e:'I do not have the bandwidth this week.',m:'bandwidth',r:'商務'},
+    {t:'align on',z:'就…達成共識',p:'agree on',e:'We need to align on priorities first.',m:'align(s|ed|ing)? (on|with)',r:'商務'},
+    {t:'move the needle',z:'產生實質影響',p:'make a real difference',e:'This feature will not move the needle.',m:'mov(e|es|ed|ing) the needle',r:'商務'},
+    {t:'on track',z:'按進度進行',p:'going as planned',e:'The project is on track for May.',m:'on track',r:'商務'},
+    {t:'flag',z:'提出、標示出（問題）',p:'tell you about a problem',e:'I want to flag a risk in the timeline.',m:'flag(s|ged|ging)?',r:'商務'},
+    {t:'a growing body of',z:'越來越多的（研究）',p:'many studies',e:'A growing body of literature supports this view.',m:'growing body of',r:'學術'},
+    {t:'it is worth noting that',z:'值得注意的是',p:'also',e:'It is worth noting that the sample was small.',m:'worth noting',r:'學術'},
+    {t:'shed light on',z:'闡明、使更清楚',p:'explain',e:'The results shed light on the mechanism.',m:'shed(s|ding)? light on',r:'學術'},
+    {t:'be consistent with',z:'與…一致',p:'match',e:'The results are consistent with prior work.',m:'consistent with',r:'學術'},
+    {t:'account for',z:'解釋、占（比例）',p:'explain the reason of',e:'Noise accounts for most of the error.',m:'account(s|ed|ing)? for',r:'學術'},
+    {t:'trade-off',z:'取捨、權衡',p:'good and bad both',e:'There is a trade-off between speed and accuracy.',m:'trade-?offs?',r:'學術'},
+    {t:'outperform',z:'表現優於',p:'better than',e:'Our model outperforms the baseline.',m:'outperform',r:'學術'},
+    {t:'subject to',z:'受限於、取決於',p:'with the limit of',e:'The solution is subject to three constraints.',m:'subject to',r:'學術'},
+    {t:"In my opinion",z:"我認為",p:"I think",e:"In my opinion, remote work suits most people.",r:"口語"},
+    {t:"From my point of view",z:"我的看法是",p:"My view is",e:"From my point of view, practice matters more than theory.",r:"口語"},
+    {t:"As far as I'm concerned",z:"就我個人而言",p:"My personal view",e:"As far as I'm concerned, reading is the best way to learn.",r:"口語"},
+    {t:"I'm inclined to think",z:"我傾向認為",p:"I tend to believe",e:"I'm inclined to think that cities should invest in public transport.",m:"inclined to think",r:"口語"},
+    {t:"It seems to me that",z:"我覺得…",p:"I feel that",e:"It seems to me that young people adapt very quickly.",r:"口語"},
+    {t:"I strongly believe",z:"我非常確信",p:"I am very sure",e:"I strongly believe that education should be free for everyone.",r:"口語"},
+    {t:"I'd say that",z:"我會說…",p:"I would argue",e:"I'd say that technology has improved our daily lives.",r:"口語"},
+    {t:"To be honest",z:"老實說",p:"Speaking frankly",e:"To be honest, I found the first option more convincing.",r:"口語"},
+    {t:"I couldn't agree more",z:"我完全同意",p:"I fully agree",e:"I couldn't agree more with your point about exercise.",r:"口語"},
+    {t:"I beg to differ",z:"恕我不同意",p:"I disagree politely",e:"I beg to differ, because the data suggests otherwise.",r:"口語"},
+    {t:"Let me think",z:"讓我想一下",p:"I need a moment",e:"Let me think... I'd say the city center is the best option.",r:"口語"},
+    {t:"That's a good question",z:"好問題",p:"Gives thinking time",e:"That's a good question. I've never really considered it.",r:"口語"},
+    {t:"Well, to be fair",z:"公平地說",p:"Being balanced",e:"Well, to be fair, the program has some benefits.",r:"口語"},
+    {t:"How should I put it?",z:"我該怎麼說呢？",p:"Finding the words",e:"How should I put it? It was more of a learning experience.",r:"口語"},
+    {t:"What I mean is",z:"我的意思是",p:"Clarifying your point",e:"What I mean is that practice is more important than talent.",r:"口語"},
+    {t:"In other words",z:"換句話說",p:"Say it differently",e:"In other words, you need a plan before you start.",r:"口語"},
+    {t:"As a matter of fact",z:"事實上",p:"Actually",e:"As a matter of fact, I moved to this city last year.",r:"口語"},
+    {t:"To tell you the truth",z:"老實告訴你",p:"Honestly",e:"To tell you the truth, I didn't enjoy the film much.",r:"口語"},
+    {t:"If I remember correctly",z:"如果我沒記錯的話",p:"Not fully sure",e:"If I remember correctly, the meeting was on Monday.",r:"口語"},
+    {t:"Let me put it this way",z:"我這樣說吧",p:"Explain simply",e:"Let me put it this way: the car is cheap but slow.",r:"口語"},
+    {t:"Once in a blue moon",z:"極少見",p:"Very rarely",e:"I eat fast food once in a blue moon.",m:"once in a blue moon",r:"口語"},
+    {t:"Out of the blue",z:"突然地",p:"Unexpectedly",e:"She called me out of the blue last night.",r:"口語"},
+    {t:"Hit the books",z:"用功讀書",p:"Study hard",e:"I need to hit the books before the exam.",m:"hit(s|ting)? the books",r:"口語"},
+    {t:"On the spur of the moment",z:"一時興起",p:"Without planning",e:"We went to the beach on the spur of the moment.",r:"口語"},
+    {t:"Break the ice",z:"打破僵局",p:"Start a conversation",e:"A joke is a great way to break the ice at parties.",m:"break(s|ing)? the ice|broke the ice",r:"口語"},
+    {t:"Have a whale of a time",z:"玩得非常開心",p:"Enjoy greatly",e:"We had a whale of a time at the music festival.",m:"(had|have|has) a whale of a time",r:"口語"},
+    {t:"Burn the midnight oil",z:"熬夜工作",p:"Work late at night",e:"I burned the midnight oil to finish my essay.",m:"burn(ed|s|ing)? the midnight oil|burnt the midnight oil",r:"口語"},
+    {t:"A blessing in disguise",z:"因禍得福",p:"Good thing hidden in a bad one",e:"Losing that job turned out to be a blessing in disguise.",m:"blessing in disguise",r:"口語"},
+    {t:"Get the hang of it",z:"掌握訣竅",p:"Learn how to do it",e:"It took a week, but I finally got the hang of it.",m:"(get|gets|got|getting) the hang of",r:"口語"},
+    {t:"The time of my life",z:"人生最美好的時光",p:"A wonderful experience",e:"That summer in Japan was the time of my life.",r:"口語"},
+    {t:"On the other hand",z:"另一方面",p:"but",e:"Cities are convenient. On the other hand, they are expensive and crowded.",r:"學術"},
+    {t:"In contrast",z:"相較之下",p:"the opposite",e:"Rural areas are quiet. In contrast, city life is busy.",r:"學術"},
+    {t:"Despite this",z:"即便如此",p:"even so",e:"Prices rose sharply. Despite this, sales remained strong.",r:"學術"},
+    {t:"In addition to",z:"除了…之外",p:"as well as",e:"In addition to reading, students should practice speaking.",m:"in addition to",r:"學術"},
+    {t:"Not only... but also",z:"不僅…而且",p:"both",e:"Not only does exercise improve health, but it also boosts mood.",m:"not only.*but also",r:"學術"},
+    {t:"Due to",z:"由於",p:"Because of",e:"Due to heavy rain, the match was cancelled.",r:"學術"},
+    {t:"As a result",z:"因此",p:"Therefore",e:"Traffic increased. As a result, travel time doubled.",r:"學術"},
+    {t:"Lead to",z:"導致",p:"Cause",e:"Poor sleep can lead to lower concentration.",m:"(leads?|led|leading) to",r:"學術"},
+    {t:"Give rise to",z:"引發、產生",p:"Produce or cause",e:"New technology gave rise to many new jobs.",m:"gave rise to|give rise to|gives rise to|giving rise to",r:"學術"},
+    {t:"Contribute to",z:"促成、有助於",p:"Help to cause",e:"Smoking contributes to heart disease.",m:"contribut(e|es|ed|ing) to",r:"學術"},
+    {t:"For instance",z:"例如",p:"For example",e:"Many fruits are rich in vitamins. For instance, oranges contain vitamin C.",r:"學術"},
+    {t:"It is widely believed",z:"普遍認為",p:"Many people think",e:"It is widely believed that reading improves memory.",r:"學術"},
+    {t:"All things considered",z:"綜合考量之後",p:"After thinking it through",e:"All things considered, public transport is the better choice.",r:"學術"},
+    {t:"In conclusion",z:"總結來說",p:"To sum up",e:"In conclusion, governments should act now.",r:"學術"},
+    {t:"Rise sharply",z:"急遽上升",p:"Increase quickly",e:"Oil prices rose sharply in March.",m:"(rise|rises|rising|rose|risen) sharply",r:"學術"},
+    {t:"Drop significantly",z:"大幅下降",p:"Fall by a lot",e:"Unemployment dropped significantly after 2010.",m:"(drop|drops|dropped|dropping) significantly",r:"學術"},
+    {t:"Remain stable",z:"保持穩定",p:"Stay the same",e:"The figure remained stable over the period.",m:"remain(s|ed|ing)? stable",r:"學術"},
+    {t:"Peak at",z:"達到最高點",p:"Reach the highest point",e:"Sales peaked at 500 units in July.",m:"peak(s|ed|ing)? at",r:"學術"},
+    {t:"Hit a low",z:"跌至最低點",p:"Reach the lowest point",e:"The index hit a low in 2020.",m:"(hit|hits|hitting) a low",r:"學術"},
+    {t:"A slight increase",z:"小幅增加",p:"A small rise",e:"There was a slight increase in exports.",r:"學術"},
+    {t:"Level off",z:"趨於平穩",p:"Stop changing",e:"Prices began to level off in the second half of the year.",m:"level(s|ed|ing)? off",r:"學術"},
+    {t:"Over the period",z:"在此期間內",p:"During the time shown",e:"Over the period, the number of users tripled.",r:"學術"},
+    {t:"A double-edged sword",z:"利弊並存的事物",p:"Both good and bad",e:"Social media is a double-edged sword.",m:"double-edged sword",r:"口語"},
+    {t:"The tip of the iceberg",z:"冰山一角",p:"A small visible part of a bigger problem",e:"Rising prices are just the tip of the iceberg.",m:"tip of the iceberg",r:"口語"},
+    {t:"To be a game changer",z:"改變局勢的關鍵",p:"Something that changes things a lot",e:"Remote work could be a game changer for families.",m:"game[- ]changer",r:"口語"},
+    {t:"A means to an end",z:"達成其他目標的手段",p:"Something done to reach another goal",e:"For many people, a degree is a means to an end.",m:"means to an end",r:"口語"},
+    {t:"To strike a balance",z:"取得平衡",p:"Find a compromise between two things",e:"It is important to strike a balance between work and rest.",m:"strike (a|the) balance|struck a balance",r:"口語"},
+    {t:"Take it offline",z:"私下討論，不在群組裡談",p:"Discussing privately, not in the group",e:"Let's take it offline and talk after the meeting.",r:"商務"},
+    {t:"On the same page",z:"大家理解一致",p:"Everyone understanding the same thing",e:"Before we start, let's make sure we're all on the same page.",r:"商務"},
+    {t:"Low-hanging fruit",z:"最容易先完成的任務",p:"The easiest tasks to knock out first",e:"Let's grab the low-hanging fruit first.",r:"商務"},
+    {t:"Think outside the box",z:"想出不尋常的點子",p:"Coming up with an unconventional idea",e:"The team had to think outside the box to win new clients.",r:"通用"},
+    {t:"Back to square one",z:"挫折後從頭來過",p:"Starting over after a setback",e:"The data was wrong, so we're back to square one.",r:"口語"},
+    {t:"Get sign-off",z:"取得正式批准",p:"Getting official approval",e:"We still need to get sign-off from legal.",r:"商務"},
+    {t:"Hold that thought",z:"先擱著這個話題",p:"Pausing a discussion for later",e:"Hold that thought, I'll come back to it in a minute.",r:"口語"},
+    {t:"Stay in the loop",z:"持續掌握最新狀況",p:"Being kept informed",e:"Please stay in the loop on the project.",r:"商務"},
+    {t:"Drop me a line",z:"簡短傳個訊息給我",p:"Send a quick message",e:"Drop me a line when you land.",r:"口語"},
+    {t:"Coming down the pipeline",z:"即將到來或進行中的事",p:"Something upcoming or in progress",e:"There are some big changes coming down the pipeline.",r:"商務"},
+    {t:"When it's all said and done",z:"歸根究柢、總結來說",p:"Summarizing the final takeaway",e:"When it's all said and done, the plan was worth it.",r:"通用"},
+    {t:"Tried-and-tested methods",z:"經過驗證的可靠方法",p:"Proven, reliable approaches",e:"We rely on tried-and-tested methods for every project.",r:"通用"},
+    {t:"Add-on benefit",z:"基本功能之外的額外好處",p:"An extra advantage beyond the basics",e:"The free upgrade is a nice add-on benefit.",r:"商務"},
+    {t:"Fast, easy success",z:"輕鬆快速的小勝利",p:"A quick win with little effort",e:"Updating the template was a fast, easy success.",r:"口語"},
+    {t:"Combined effect",z:"綜合效果、協同加成",p:"Synergy, working together for better results",e:"The combined effect of both changes boosted sales.",r:"商務"},
+    {t:"Postpone the topic",z:"暫時擱置議題",p:"Setting a discussion aside for now",e:"Let's postpone the topic until next week.",r:"商務"},
+    {t:"Contribute to the discussion",z:"為討論貢獻想法或資源",p:"Bringing ideas or resources",e:"I'd like to contribute to the discussion with some data.",r:"商務"},
+    {t:"Plan of attack",z:"整體策略、作戰計畫",p:"Your overall strategy",e:"What's our plan of attack for the launch?",r:"商務"},
+    {t:"To-do list items",z:"待辦事項",p:"Specific tasks that need finishing",e:"Let's review the to-do list items for today.",r:"商務"},
+    {t:"Include someone",z:"把某人納入",p:"Adding them into the conversation",e:"Please include someone from finance in the call.",r:"商務"},
+    {t:"Warning sign",z:"警訊",p:"A red flag, something concerning",e:"A sudden drop in users is a warning sign.",r:"商務"},
+    {t:"Take charge of a mistake",z:"對錯誤負起責任",p:"Accepting responsibility",e:"She took charge of a mistake and fixed it fast.",r:"通用"},
+    {t:"Point of contact",z:"聯絡窗口",p:"Touchpoint where interaction happens",e:"Who is our point of contact at the vendor?",r:"商務"},
+    {t:"Thorough dive",z:"深入細查",p:"Looking closely into details",e:"We need a thorough dive into the numbers.",r:"商務"},
+    {t:"Rough number",z:"大概的數字",p:"An approximate estimate",e:"Give me a rough number for the budget.",r:"口語"},
+    {t:"Quick pitch",z:"簡短有說服力的摘要",p:"A short, persuasive summary",e:"Prepare a quick pitch for the investors.",r:"商務"},
+    {t:"Key people involved",z:"專案的關鍵相關人員",p:"Stakeholders in a project",e:"Let's list the key people involved in this project.",r:"商務"},
+    {t:"Staying alert to something",z:"持續留意某事",p:"Keeping it on your radar",e:"We are staying alert to something unusual in the data.",r:"商務"},
+    {t:"Facing resistance",z:"遭遇阻力",p:"Getting pushback",e:"The new policy is facing resistance from staff.",r:"商務"},
+    {t:"Get in touch",z:"與某人聯繫",p:"Reaching out to someone",e:"I'll get in touch with you tomorrow.",r:"通用"},
+    {t:"Bring someone into the conversation",z:"把某人拉進討論",p:"Loop them in",e:"Let's bring Anna into the conversation.",r:"商務"},
+    {t:"What comes after",z:"接下來的步驟",p:"The next steps",e:"Let's figure out what comes after the approval.",r:"商務"},
+    {t:"Start strong immediately",z:"一開始就全力以赴",p:"Hitting the ground running",e:"We need to start strong immediately.",r:"商務"},
+    {t:"Everyone pitching in",z:"大家一起出力",p:"All hands on deck",e:"Everyone pitching in made the deadline possible.",r:"口語"},
+    {t:"Catching someone up",z:"讓某人跟上進度",p:"Bringing them up to speed",e:"Let me start by catching you up on today's changes.",m:"catch(ing|es)? (someone|you|them) up",r:"口語"},
+    {t:"Speed things up",z:"加快進度",p:"Fast-tracking a project",e:"We need to speed things up to hit the deadline.",r:"商務"},
+    {t:"Push for higher standards",z:"提高標準",p:"Raising the bar",e:"The manager will push for higher standards.",r:"商務"},
+    {t:"Make the final call",z:"做最終決定",p:"Calling the shots",e:"The director will make the final call.",r:"商務"},
+    {t:"Most advanced/modern",z:"最先進的",p:"Cutting-edge",e:"This lab uses the most advanced/modern equipment.",r:"通用"},
+    {t:"Away from public view",z:"在檯面下進行、不為人知",p:"Happening behind the scenes",e:"Much of the work happens away from public view.",r:"通用"},
+    {t:"Making things fair",z:"讓競爭條件公平",p:"Leveling the playing field",e:"New rules are making things fair for small businesses.",r:"通用"},
+    {t:"Getting approval",z:"獲得批准",p:"A green light to proceed",e:"We are getting approval from the board next week.",r:"商務"},
+    {t:"Quick summary",z:"簡要總結",p:"In a nutshell",e:"Quick summary: sales rose, but costs rose faster.",r:"口語"},
+    {t:"Building new skills",z:"培養新技能",p:"Upskilling",e:"She spends her weekends building new skills.",r:"商務"},
+    {t:"Reacting quickly under pressure",z:"在壓力下快速反應",p:"Thinking on your feet",e:"He is great at reacting quickly under pressure.",r:"通用"},
+    {t:"Moving up professionally",z:"職涯晉升",p:"Climbing the ladder",e:"She is moving up professionally at her company.",r:"商務"},
+    {t:"Getting a new hire settled in",z:"協助新人適應",p:"Onboarding",e:"We're getting a new hire settled in this week.",r:"商務"},
+    {t:"Applying to everyone equally",z:"一視同仁",p:"Across the board",e:"We are applying to everyone equally, with no exceptions.",r:"商務"},
+    {t:"Simplifying the main idea",z:"簡化重點",p:"Boiling it down",e:"Let me try simplifying the main idea for you.",r:"口語"},
+    {t:"Looking deeper into specifics",z:"深入細節",p:"Drilling down",e:"We need to start looking deeper into specifics.",r:"商務"},
+    {t:"Staying focused",z:"保持專注",p:"Keeping your eye on the ball",e:"Staying focused is the key to finishing on time.",r:"口語"},
+    {t:"Delaying something temporarily",z:"暫時擱置",p:"Putting it on the back burner",e:"Delaying something temporarily makes sense until the budget is ready.",r:"口語"},
+    {t:"Time it takes to get comfortable with something new",z:"適應新事物所需的時間",p:"The learning curve",e:"Expect a steep learning curve with any new tool.",m:"learning curve|time it takes to get comfortable with something new",r:"通用"},
+    {t:"Falling short of a target",z:"未達目標",p:"Missing the mark",e:"Sales fell short of a target this quarter.",r:"商務"},
+    {t:"Not the right match",z:"不合適",p:"Not a good fit",e:"The candidate was not the right match for the role.",r:"商務"},
+    {t:"Voicing an issue",z:"提出疑慮",p:"Raising concerns",e:"She is voicing an issue about the timeline.",r:"商務"},
+    {t:"Acting without waiting for instructions",z:"主動行動",p:"Taking initiative",e:"He is good at acting without waiting for instructions.",r:"商務"},
+    {t:"Matching efforts to objectives",z:"讓努力與目標一致",p:"Aligning with goals",e:"Matching efforts to objectives keeps the team focused.",r:"商務"},
+    {t:"Anticipating needs early",z:"提前預判需求",p:"Being proactive",e:"Anticipating needs early saves time later.",r:"商務"},
+    {t:"Real-world, practical exposure",z:"實務經驗",p:"Hands-on experience",e:"The internship gave me real-world, practical exposure.",r:"商務"},
+    {t:"Finishing on time",z:"準時完成",p:"Meeting the deadline",e:"Finishing on time is our top priority.",r:"商務"},
+    {t:"Getting missed or ignored",z:"被遺漏、被忽略",p:"Falling through the cracks",e:"Getting missed or ignored is a risk when tasks aren't tracked.",r:"口語"},
+    {t:"Setting big goals",z:"設定遠大目標",p:"Thinking big",e:"Setting big goals pushed the team forward.",r:"通用"},
+    {t:"Avoiding attention",z:"低調行事",p:"Staying under the radar",e:"He prefers avoiding attention at work.",r:"口語"},
+    {t:"Deciding as you go",z:"邊走邊決定",p:"Playing it by ear",e:"We're deciding as you go, so nothing is fixed yet.",r:"口語"},
+    {t:"Being extremely precise",z:"非常精準、一絲不苟",p:"Dotting the i's and crossing the t's",e:"Being extremely precise is part of her job.",r:"通用"},
+    {t:"Getting something started",z:"開始推動",p:"Getting the ball rolling",e:"Getting something started takes courage.",r:"口語"},
+    {t:"Play devil's advocate",z:"扮演唱反調的角色",p:"Argue opposite side to test ideas",e:"Let me play devil's advocate for a moment.",r:"通用"},
+    {t:"Put into perspective",z:"客觀看待、放在適當脈絡中",p:"See something in its true context",e:"Put into perspective, the loss was small.",r:"通用"},
+    {t:"Raise the stakes",z:"提高風險或重要性",p:"Increase the risk or importance",e:"The new deadline raises the stakes.",m:"rais(e|es|ed) the stakes",r:"通用"},
+    {t:"Rest on laurels",z:"吃老本、因過去成功而懈怠",p:"Stop trying after past success",e:"We can't rest on our laurels.",r:"通用"},
+    {t:"Rise to the occasion",z:"在關鍵時刻表現出色",p:"Perform well under pressure",e:"She rose to the occasion during the crisis.",m:"rise to the occasion|rose to the occasion",r:"通用"},
+    {t:"Run its course",z:"自然走到盡頭",p:"Reach a natural end or conclusion",e:"The trend has run its course.",r:"通用"},
+    {t:"See eye to eye",z:"看法完全一致",p:"Agree completely with someone",e:"The two managers see eye to eye on this.",m:"(see|sees|saw) eye to eye",r:"通用"},
+    {t:"Set the precedent",z:"開創先例",p:"Establish an example for the future",e:"This ruling sets the precedent for future cases.",m:"sets? the precedent",r:"通用"},
+    {t:"Stand in good stead",z:"日後派上用場",p:"Be useful or beneficial in future",e:"Those skills will stand you in good stead.",r:"通用"},
+    {t:"Strike a chord",z:"引起共鳴",p:"Trigger an emotional response",e:"Her speech struck a chord with the audience.",m:"(strike|strikes|struck) a chord",r:"通用"},
+    {t:"Take into account",z:"納入考量",p:"Consider something when deciding",e:"Please take into account the budget.",r:"通用"},
+    {t:"Take the initiative",z:"主動出擊",p:"Act without being asked to",e:"He took the initiative to organize the event.",m:"(take|takes|took|taken) the initiative",r:"通用"},
+    {t:"Tip the scales",z:"左右局勢、促成結果",p:"Make one side more likely to win",e:"One vote tipped the scales.",m:"tip(s|ped)? the scales",r:"通用"},
+    {t:"To no avail",z:"徒勞無功",p:"Without achieving the desired result",e:"We tried, but to no avail.",r:"通用"},
+    {t:"Touch a nerve",z:"觸動痛處",p:"Cause someone to feel upset",e:"His comment touched a nerve.",m:"touch(ed|es)? a nerve",r:"通用"},
+    {t:"Under the radar",z:"不引人注目",p:"Not noticed or attracting attention",e:"The project stayed under the radar.",r:"通用"},
+    {t:"Weigh up the options",z:"權衡選項",p:"Carefully consider all choices",e:"Let's weigh up the options before deciding.",r:"通用"},
+    {t:"Without reservation",z:"毫無保留",p:"Completely and without any doubt",e:"I recommend her without reservation.",r:"通用"},
+    {t:"Worth its weight",z:"極有價值",p:"Extremely valuable and useful",e:"This tool is worth its weight in gold.",r:"通用"},
+    {t:"Against all odds",z:"逆境中、以微弱機會取勝",p:"Despite very low chances of success",e:"She won against all odds.",r:"通用"},
+    {t:"At your discretion",z:"由你自行決定",p:"Based on your own judgement",e:"Use the budget at your discretion.",r:"通用"},
+    {t:"Beg to differ",z:"禮貌地不同意",p:"Politely disagree with someone",e:"I beg to differ on that point.",r:"通用"},
+    {t:"Beyond any doubt",z:"毫無疑問",p:"Completely and absolutely certain",e:"It is beyond any doubt that he is qualified.",r:"通用"},
+    {t:"Bite the hand",z:"恩將仇報",p:"Harm whoever helped or feeds you",e:"Don't bite the hand that feeds you.",r:"通用"},
+    {t:"Break new ground",z:"開創先河",p:"Do something innovative or pioneering",e:"The lab aims to break new ground in genetics.",r:"通用"},
+    {t:"Bring to fruition",z:"使實現、開花結果",p:"Make something finally happen",e:"We hope this plan will bring to fruition a long-term goal.",r:"通用"},
+    {t:"By all accounts",z:"據各方所說",p:"According to what everyone says",e:"By all accounts, the restaurant is excellent.",r:"通用"},
+    {t:"Cast in stone",z:"板上釘釘",p:"Fixed and impossible to change",e:"The schedule is not cast in stone.",r:"通用"},
+    {t:"Come to terms",z:"接受現實",p:"Accept something difficult emotionally",e:"She has come to terms with the loss.",r:"通用"},
+    {t:"Cut to the chase",z:"直截了當",p:"Get to the point immediately",e:"Let's cut to the chase.",r:"通用"},
+    {t:"Draw a distinction",z:"區分兩者",p:"Highlight a difference between things",e:"We must draw a distinction between the two.",r:"通用"},
+    {t:"Draw the line",z:"劃出底線",p:"Set a limit on what is acceptable",e:"I have to draw the line at unpaid overtime.",r:"通用"},
+    {t:"Drive home a point",z:"把重點說透",p:"Make something fully understood",e:"She tried to drive home a point with data.",r:"通用"},
+    {t:"Fall into place",z:"逐漸豁然開朗、一切就緒",p:"Things start to make sense",e:"Once I saw the chart, it all began to fall into place.",m:"fall(s|ing)? into place",r:"通用"},
+    {t:"Find common ground",z:"找到共識",p:"Discover shared opinions or goals",e:"The two parties were able to find common ground.",r:"通用"},
+    {t:"Fly in the face",z:"公然違背",p:"Openly go against something established",e:"The result flies in the face of expectations.",m:"fl(y|ies) in the face",r:"通用"},
+    {t:"Gain the upper hand",z:"取得優勢",p:"Achieve a position of advantage",e:"The team aimed to gain the upper hand.",r:"通用"},
+    {t:"Get to grips",z:"開始掌握",p:"Begin to understand something difficult",e:"It took time to get to grips with the software.",r:"通用"},
+    {t:"Go hand in hand",z:"密不可分",p:"Two things closely connected",e:"Success and hard work go hand in hand.",r:"通用"},
+    {t:"Grasp the nettle",z:"迎難而上",p:"Tackle a difficult problem boldly",e:"It's time to grasp the nettle and fix the budget.",r:"通用"},
+    {t:"Hang in the balance",z:"懸而未決",p:"Outcome is still very uncertain",e:"The decision still hangs in the balance.",m:"hangs? in the balance",r:"通用"},
+    {t:"Have a bearing on",z:"影響、與…相關",p:"Be relevant or affect something",e:"Your results will have a bearing on the outcome.",r:"通用"},
+    {t:"Hold your ground",z:"堅持立場",p:"Refuse to change your position",e:"Hold your ground when the other side pushes back.",r:"通用"},
+    {t:"In the long run",z:"從長遠來看",p:"Over a long period of time",e:"In the long run, saving pays off.",r:"通用"},
+    {t:"In the wake of",z:"緊接在…之後、因…而起",p:"As a result of something that happened",e:"In the wake of the storm, prices rose.",r:"通用"},
+    {t:"Keep tabs on",z:"密切留意",p:"Closely monitor someone or something",e:"I keep tabs on the market every day.",r:"通用"},
+    {t:"Lay the foundation",z:"奠定基礎",p:"Create the basis for something",e:"Hard work can lay the foundation for success.",r:"通用"},
+    {t:"Leave no stone unturned",z:"竭盡所能",p:"Try every possible option",e:"The police left no stone unturned.",r:"通用"},
+    {t:"Lend credence to",z:"使…更可信",p:"Make something seem more believable",e:"The new data lends credence to the theory.",m:"lends? credence to",r:"通用"},
+    {t:"Make a concession",z:"讓步",p:"Give something up in a negotiation",e:"Both sides agreed to make a concession.",r:"通用"},
+    {t:"Make inroads into",z:"開始打入、取得進展",p:"Start making progress in something",e:"The brand made inroads into the Asian market.",m:"(make|makes|made) inroads into",r:"通用"},
+    {t:"Meet halfway",z:"各退一步",p:"Reach a compromise with someone",e:"Let's meet halfway on the price.",r:"通用"},
+    {t:"Nip it in the bud",z:"防微杜漸",p:"Stop something before it grows",e:"We must nip it in the bud.",r:"通用"},
+    {t:"On the cusp of",z:"處於…的邊緣",p:"At the point of something happening",e:"The company is on the cusp of a breakthrough.",r:"通用"},
+    {t:"Open to interpretation",z:"可有多種解讀",p:"Can be understood in different ways",e:"The poem is open to interpretation.",r:"通用"},
+    {t:"Paint the picture",z:"描繪清楚的情況",p:"Describe a situation clearly",e:"Let me paint the picture for you.",r:"通用"},
+    {t:"Pave the way",z:"鋪路、為…創造條件",p:"Create conditions for future success",e:"This deal paves the way for expansion.",m:"pave(s|d)? the way",r:"通用"},
+    {t:"Pick up the slack",z:"承擔別人沒做的工作",p:"Do extra work others are not doing",e:"She picked up the slack while he was away.",r:"通用"}
+  ];
+  var REG={'with respect to':'商務','ramp up':'商務','throw a pity party':'口語','manifest':'口語','vibe out with':'口語','show up for':'口語','you name it':'口語','beat up on':'口語'};
+  BASE.forEach(function(c){c.r=c.r||REG[c.t]||'通用'});
+  var REGS=['口語','商務','學術','通用'];
+  var PROMPTS={
+    '口語':[
+      ['Describe a time you took on a challenge that was not simple and not easy.','說明挑戰是什麼、為什麼被吸引、你怎麼撐過來。'],
+      ['Describe a hobby you picked up recently and why you enjoy it.','說明怎麼開始、它帶給你什麼、之後想怎麼發展。'],
+      ['Describe a trip that did not go as planned.','說明原本的計畫、出了什麼狀況、你怎麼應對。'],
+      ['Describe a person you admire and what you have learned from them.','說明這個人是誰、你們的關係、你學到什麼。'],
+      ['Describe a decision that changed your daily routine.','說明當時的情況、你怎麼決定、帶來什麼改變。'],
+      ['Talk about a time you helped a friend through a hard period.','說明發生什麼事、你做了什麼、這段經驗的意義。'],
+      ['Describe a skill you wish you had learned earlier.','說明是什麼技能、為什麼希望早點學、現在打算怎麼做。'],
+      ['Describe a place in your city you would recommend to a visitor.','說明地點、特色，以及為什麼推薦。']
+    ],
+    '商務':[
+      ['Write an email to your manager explaining that a project is behind schedule, what caused the delay, and how you plan to get back on track.','說明延誤的原因、影響，以及你打算怎麼追回進度。'],
+      ['Write a message to a client proposing a new timeline after the project scope changed.','說明範圍改了什麼、新時程，以及對客戶的好處。'],
+      ['Write a short proposal to your team suggesting a better way to run weekly meetings.','說明現在的問題、你的做法、預期效果。'],
+      ['Write an email asking a colleague in another department for data you need by Friday.','說明需要什麼、為什麼急、你能提供什麼協助。'],
+      ['Write a kickoff message for a new project: goals, roles and the first milestone.','說明目標、分工與第一個里程碑。'],
+      ['Write a reply to a customer who complained about a late delivery.','道歉、說明原因、提出補償與後續。'],
+      ['Write a self-review of what you achieved this quarter and what you will improve.','說明成果、遇到的困難、下一季目標。'],
+      ['Write an email politely pushing back on an unrealistic deadline.','說明為什麼不可行、替代方案、需要的資源。']
+    ],
+    '學術':[
+      ['Introduce your research topic to a conference audience: what problem you study, why it matters, and what your approach shows.','說明研究的問題、為什麼重要，以及你的方法。'],
+      ['Some people think universities should focus on job skills; others believe they should focus on knowledge for its own sake. Discuss both views and give your opinion.','IELTS Task 2 雙觀點題：兩邊各一段，再表明立場。'],
+      ['Many cities are becoming more crowded. What problems does this cause, and what solutions can you suggest?','問題—解決題：先寫問題，再提出具體方案。'],
+      ['Artificial intelligence is increasingly used in education. Do the advantages outweigh the disadvantages?','利弊題：比較兩邊，明確表態。'],
+      ['Some argue that working from home reduces productivity. To what extent do you agree or disagree?','同意／不同意題：清楚立場，兩到三個理由。'],
+      ['Governments should spend more on public transport than on building new roads. Discuss.','論述題：給理由與例子，最後總結。'],
+      ['Summarize a paper or article you read recently and evaluate its main argument.','說明主旨、方法，以及你同意或質疑的地方。'],
+      ['Explain a trade-off in your field and how researchers usually deal with it.','說明取捨是什麼、常見做法、你的看法。']
+    ]
+  };
+
+  /* ---------- constants ---------- */
+  var TRAYCAP=15,WPERDAY=5,PPERDAY=5,PCAP=15,NEWMAX=10,REVMAX=20,INT=[0,1,3,7,14,30,60];
+  var KEYS=['custom','known','comps','inbox','words','srs','tray','wskip','rel','newSeen','cls','mv','pai','xpool','wkc'];
+  var $=function(s){return document.querySelector(s)};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function reEsc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+  function fmt(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  function today(){return fmt(new Date())}
+  function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return fmt(d)}
+  function hashStr(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+  function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function slug(w){var s=String(w).normalize('NFKD').replace(/[^\x00-\x7F]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');return s||('w'+Date.now())}
+
+  /* ---------- storage (local first, mirrored to the db when available) ---------- */
+  var dbH=null,dbReady=false,dbState='',pushT=null;
+  function load(k,d){try{var v=localStorage.getItem('rp-'+k);return v?JSON.parse(v):d}catch(e){return d}}
+  function save(k,v){
+    try{localStorage.setItem('rp-'+k,JSON.stringify(v))}catch(e){}
+    if(KEYS.indexOf(k)>=0){try{localStorage.setItem('rp-ts',String(Date.now()))}catch(e){}schedPush()}
+  }
+  function schedPush(){if(!dbH)return;clearTimeout(pushT);pushT=setTimeout(pushState,2500)}
+  function pushState(){
+    if(!dbH)return;
+    var d={custom:custom,known:known,comps:comps,inbox:inbox,words:words,srs:srs,tray:tray,wskip:wskip,rel:rel,newSeen:newSeen,cls:cls,mv:mv,pai:pai,xpool:xpool,wkc:wkc};
+    var ts=+(localStorage.getItem('rp-ts')||0)||Date.now();
+    try{dbH.doc('state/u').set({ts:ts,json:JSON.stringify(d)}).catch(function(){})}catch(e){}
+  }
+  var custom,known,draft,comps,inbox,words,srs,tray,wskip,rel,newSeen,cls,mv,pai,xpool={},wkc={};
+  function initState(){
+    custom=load('custom',[]);known=load('known',{});draft=load('draft','');comps=load('comps',[]);inbox=load('inbox',[]);
+    words=load('words',null);
+    if(!words){words=WSEED.map(function(x){var o={};for(var k in x)o[k]=x[k];o.d=today();o.src='你的範例';return o});try{localStorage.setItem('rp-words',JSON.stringify(words));localStorage.setItem('rp-seeded','1')}catch(e){}}
+    srs=load('srs',{});tray=load('tray',[]);wskip=load('wskip',[]);rel=load('rel',{d:'',w:0,p:0});newSeen=load('newSeen',{d:'',n:0});cls=load('cls',{});mv=load('mv',[]);pai=load('pai',{});xpool=load('xpool',{});wkc=load('wkc',{});
+    custom.forEach(function(c){c.r=c.r||'通用'});
+  }
+  function pullState(){
+    return dbH.doc('state/u').get().then(function(s){
+      var d=s&&(typeof s.data==='function'?s.data():s.data);
+      var lts=+(localStorage.getItem('rp-ts')||0);
+      var seeded=localStorage.getItem('rp-seeded')==='1';
+      var hasCloud=!!(d&&d.json&&d.ts);
+      if(hasCloud&&(seeded||d.ts>lts)){
+        try{
+          var o=JSON.parse(d.json);
+          KEYS.forEach(function(k){if(o[k]!==undefined){try{localStorage.setItem('rp-'+k,JSON.stringify(o[k]))}catch(e){}}});
+          localStorage.setItem('rp-ts',String(d.ts));localStorage.removeItem('rp-seeded');initState();
+        }catch(e){}
+      }else if(!hasCloud&&!seeded){pushState()}
+      else if(hasCloud&&d.ts<lts&&!seeded){pushState()}
+      if(hasCloud){
+        var bd=today();
+        if(localStorage.getItem('rp-bak')!==bd){
+          try{dbH.doc('state/bak-'+bd).set({ts:d.ts,json:d.json}).then(function(){localStorage.setItem('rp-bak',bd)}).catch(function(){})}catch(e){}
+        }
+      }
+    }).catch(function(){});
+  }
+  function restoreFromDb(){
+    var add=[],have=function(w){return words.some(function(x){return String(x.w).toLowerCase()===String(w).toLowerCase()})};
+    return Promise.all([dbH.collection('pending').get().catch(function(){return null}),dbH.collection('col').get().catch(function(){return null})]).then(function(r){
+      var seen={};
+      [r[0],r[1]].forEach(function(c){if(!c)return;c.docs.forEach(function(dd){var o=dd.data();if(!o||!o.w)return;var k=String(o.w).toLowerCase();if(have(o.w)||seen[k])return;seen[k]=1;
+        var x={w:o.w,l:o.l||'',pr:o.pr||'',z:o.z||'',g:o.g||'',e:o.e||'',n:o.n||'',d:o.d||today(),src:o.src||'雲端還原'};add.push(x)})});
+      if(add.length){add.forEach(function(x){words.unshift(x)});save('words',words)}
+    }).catch(function(){});
+  }
+
+  /* ---------- phrase data ---------- */
+  var PHR={},phrLoaded=false,REC=[];
+  function PE(c){var o=PHR[String(c.t).toLowerCase()];if(!o)return c;var r={};for(var k in c)r[k]=c[k];for(var j in o)if(j!=='t'&&j!=='m'&&j!=='r'&&j!=='src'&&o[j]!==''&&o[j]!=null)r[j]=o[j];return r}
+  function PA(c){var a=pai&&pai[String(c.t).toLowerCase()];if(!a)return c;var r={},f=[];for(var k in c)r[k]=c[k];PFK.forEach(function(k){if(a[k]&&!String(r[k]||'').trim()){r[k]=a[k];f.push(k)}});if(f.length)r.aif=f;return r}
+  var PFK=['z','e','g','us','p'];
+  function all(){return BASE.concat(custom).filter(function(c){return mv.indexOf(String(c.t).toLowerCase())<0}).map(PE).map(PA)}
+  function pk(c){return String(c.p||'').toLowerCase().replace(/\s+/g,' ').replace(/[\s.!?]+$/,'').trim()}
+  function sameConcept(a,b){if(a.t===b.t)return false;if(a.ser&&a.ser===b.ser)return true;var k=pk(a);return !!k&&k===pk(b)}
+  function sibs(c){return all().filter(function(x){return sameConcept(c,x)})}
+  function sibTag(c){var s=sibs(c);return s.length?'<span class="sib">同一個意思，還可以說：'+s.map(function(x){return esc(x.t)+'（'+esc(x.r)+'）'}).join('、')+'</span>':''}
+  function rxOf(c){try{return new RegExp(c.m||reEsc(c.t),'i')}catch(e){return new RegExp(reEsc(c.t),'i')}}
+  function hl(c){var s=esc(c.e||'');var r=rxOf(c);try{return s.replace(new RegExp(r.source,'i'),function(m){return '<mark>'+m+'</mark>'})}catch(e){return s}}
+  function uk(c){return c.ser?'s:'+c.ser:'p:'+String(c.t).toLowerCase()}
+  function tgHtml(a){return (a&&a.length)?'<div class="tgs">'+a.map(function(t){return '<span class="tg">'+esc(t)+'</span>'}).join('')+'</div>':''}
+  function pUnits(){
+    var m={},out=[];
+    all().forEach(function(c){var k=uk(c);if(!m[k]){m[k]={key:k,k:'p',items:[],sn:c.sn||''};out.push(m[k])}if(!m[k].sn&&c.sn)m[k].sn=c.sn;m[k].items.push(c)});
+    return out;
+  }
+
+  /* ---------- word data ---------- */
+  var WSEED=[
+    {w:"Façade",l:"法文（源自義大利文）",pr:"fuh-SAHD",z:"建築物的正面；比喻虛假的外表",g:"the front of a building; a false outward appearance",e:"Behind his cheerful façade, he was exhausted.",n:"源自義大利文 facciata，原指建築物的臉面。"},
+    {w:"Saudade",l:"葡萄牙文",pr:"sow-DAH-dih",z:"對逝去或遠方的人事物，懷著甜蜜憂傷的思念",g:"a deep, wistful longing for something or someone absent",e:"The old record filled her with saudade.",n:"你寫的是 Sausade，正確拼法是 Saudade。"},
+    {w:"Eleutheria",l:"古希臘文",pr:"el-yoo-THEER-ee-uh",z:"自由",g:"freedom, liberty",e:"The Greeks honored Eleutheria as the spirit of liberty.",n:"你寫的是 Elethutheria，正確拼法是 Eleutheria（ἐλευθερία）。"},
+    {w:"Ailleurs",l:"法文",pr:"ah-YUR",z:"別處、他方",g:"elsewhere; another place",e:"She longed for an ailleurs she could not name.",n:"d'ailleurs 則是「再說、此外」的意思。"},
+    {w:"Creusa",l:"希臘神話人名",pr:"kree-OO-suh",z:"克瑞烏薩：埃涅阿斯的妻子",g:"wife of Aeneas, lost during the fall of Troy",e:"In the Aeneid, the ghost of Creusa urges Aeneas to look ahead.",n:"這是專有名詞。"},
+    {w:"Forelsket",l:"挪威文",pr:"for-EL-sket",z:"墜入愛河的；流行說法指剛戀愛時的欣快感",g:"the euphoria of falling in love",e:"Weeks into the relationship, he was still in a state of forelsket.",n:"挪威文、丹麥文的「戀愛中」。"},
+    {w:"Eudaimonia",l:"古希臘文",pr:"yoo-dy-MOH-nee-uh",z:"幸福、人生的繁盛；活出美好生命",g:"human flourishing; living well",e:"Aristotle saw eudaimonia as the highest aim of life.",n:"字面是「好的守護靈」。"},
+    {w:"Plaintive",l:"英文（源自古法文）",pr:"PLAYN-tiv",z:"哀怨的、悲切的（聲音或語氣）",g:"sounding sad and mournful",e:"A plaintive cry echoed across the valley.",n:"源自古法文 plaintif。"}
+  ];
+  var WPOOL=[
+    {w:"Sonder",l:"新創詞（英文）",pr:"SON-der",z:"忽然意識到每個路人都有和你一樣複雜的人生",g:"the realization that every passerby has a life as vivid as your own",e:"Sitting in the café, she felt a rush of sonder.",n:"出自《The Dictionary of Obscure Sorrows》。"},
+    {w:"Petrichor",l:"英文（希臘字根）",pr:"PET-ri-kor",z:"雨後泥土的氣味",g:"the earthy smell after rain",e:"Petrichor rose from the dry road as the storm began.",n:"1964 年由澳洲科學家造出。"},
+    {w:"Hiraeth",l:"威爾斯文",pr:"HEER-eyeth",z:"對已逝去或回不去的家園的深切思念",g:"longing for a home you cannot return to",e:"Far from the hills of her childhood, she felt hiraeth.",n:"很難直接翻譯。"},
+    {w:"Mångata",l:"瑞典文",pr:"MONG-gah-tah",z:"月光映在水面上形成的光路",g:"the road-like reflection of moonlight on water",e:"We watched the mångata shimmer across the lake.",n:"由 måne（月）加 gata（路）組成。"},
+    {w:"Komorebi",l:"日文（木漏れ日）",pr:"koh-moh-REH-bee",z:"陽光透過樹葉灑落的光影",g:"sunlight filtering through leaves",e:"Komorebi flickered over the forest path.",n:"字面是「從樹間漏下的日光」。"},
+    {w:"Susurrus",l:"拉丁文",pr:"soo-SUR-us",z:"輕柔的低語聲、沙沙聲",g:"a soft whispering or rustling sound",e:"A susurrus of leaves filled the quiet garden.",n:"拉丁文擬聲詞。"},
+    {w:"Limerence",l:"新創詞（英文，1979）",pr:"LIM-er-ens",z:"不由自主的強烈迷戀，渴望對方回應",g:"an involuntary state of intense romantic infatuation",e:"His limerence faded once he got to know her.",n:"心理學家 Dorothy Tennov 在 1979 年提出。"},
+    {w:"Apricity",l:"早期現代英文（罕用詞）",pr:"ah-PRIS-ih-tee",z:"冬日陽光的暖意",g:"the warmth of the sun in winter",e:"She stood in the apricity of a January afternoon.",n:"源自拉丁文 apricus。"},
+    {w:"Weltschmerz",l:"德文",pr:"VELT-shmerts",z:"對世界不完美而感到的憂鬱與厭世",g:"melancholy over the state of the world",e:"A mild weltschmerz settled over him as he read the news.",n:"Welt（世界）加 Schmerz（痛）。"},
+    {w:"Fernweh",l:"德文",pr:"FERN-vay",z:"對遠方的渴望",g:"an ache for far-off places",e:"Winter always gives me fernweh.",n:"Fern（遠）加 Weh（痛）。"},
+    {w:"Kintsugi",l:"日文（金繕い）",pr:"kin-TSOO-gee",z:"用金粉修補破碎陶器，把裂痕視為美",g:"repairing broken pottery with gold, treating the breaks as part of its history",e:"She saw her setbacks as kintsugi, not failure.",n:"字面是「以金修補」。"},
+    {w:"Sprezzatura",l:"義大利文",pr:"spret-sah-TOO-rah",z:"舉重若輕的從容，讓困難看起來毫不費力",g:"studied nonchalance; effortless grace",e:"He delivered the difficult presentation with sprezzatura.",n:"Castiglione《廷臣論》推廣。"},
+    {w:"Eunoia",l:"希臘文",pr:"yoo-NOY-uh",z:"美好的心思、善意",g:"goodwill; a beautiful way of thinking",e:"Her letter was written with eunoia.",n:"希臘文 εὔνοια。"},
+    {w:"Nefelibata",l:"葡萄牙文／西班牙文",pr:"nef-eh-lee-BAH-tah",z:"雲中漫步者，活在幻想與夢想裡的人",g:"one who walks in the clouds; a dreamer",e:"He was a nefelibata, always sketching castles in the air.",n:"源自希臘文 nephele（雲）。"},
+    {w:"Defenestrate",l:"拉丁文字根",pr:"dee-FEN-uh-strayt",z:"把人或物從窗戶扔出去",g:"to throw out of a window",e:"The angry crowd threatened to defenestrate the notice.",n:"de-（離開）加 fenestra（窗）。"},
+    {w:"Liminal",l:"拉丁文字根",pr:"LIM-ih-nul",z:"處於門檻之間的、過渡的",g:"occupying a threshold between two states",e:"Airports feel liminal, neither here nor there.",n:"來自拉丁文 limen（門檻）。"},
+    {w:"Halcyon",l:"希臘文",pr:"HAL-see-un",z:"平靜安寧的，常指美好的往日",g:"calm and peaceful; idyllic",e:"He remembered the halcyon days of his youth.",n:"源自希臘文 halkyōn（翠鳥）。"},
+    {w:"Vellichor",l:"新創詞（英文）",pr:"VEL-ih-kor",z:"二手書店裡那種時光停駐的氛圍",g:"the strange wistfulness of a used bookshop",e:"The shop was full of vellichor.",n:"出自《The Dictionary of Obscure Sorrows》。"},
+    {w:"Anemoia",l:"新創詞（英文）",pr:"an-eh-MOY-uh",z:"對從未經歷過的年代的懷念",g:"nostalgia for a time you never knew",e:"Old film photographs give me anemoia.",n:"John Koenig 創造的新詞。"},
+    {w:"Cafuné",l:"巴西葡萄牙文",pr:"kah-foo-NEH",z:"溫柔地用手指梳理頭髮的動作",g:"tenderly running fingers through someone's hair",e:"He gave her a gentle cafuné as she fell asleep.",n:"常被列為難以翻譯的詞。"},
+    {w:"Tsundoku",l:"日文（積ん読）",pr:"tsoon-DOH-koo",z:"買了書卻堆著不讀",g:"buying books and letting them pile up unread",e:"My nightstand is a monument to tsundoku.",n:"明治時代的用語。"},
+    {w:"Gezellig",l:"荷蘭文",pr:"kheh-ZEL-ikh",z:"溫馨愜意、令人自在的氛圍",g:"cozy, convivial, pleasantly warm",e:"The candlelit café felt wonderfully gezellig.",n:"與德文 gesellig 同源。"},
+    {w:"Wend",l:"古英文（wendan）",pr:"WEND",z:"緩緩前行",g:"to go slowly along a route",e:"We wended our way through the old market.",n:"源自古英文 wendan。"},
+    {w:"Yore",l:"古英文（geāra）",pr:"YOR",z:"往昔、很久以前",g:"long ago; time past",e:"Tales of yore were told by the fire.",n:"多見於 of yore。"},
+    {w:"Eke",l:"古英文（ēacan）",pr:"EEK",z:"勉強維持（生計）；設法擠出",g:"to get or supply with difficulty, as in eke out",e:"She eked out a living on tips.",n:"原義是「增加」。"},
+    {w:"Gloaming",l:"古英文（glōmung）",pr:"GLOH-ming",z:"黃昏、暮色",g:"twilight; dusk",e:"They walked home in the gloaming.",n:"源自古英文 glōmung。"},
+    {w:"Hearken",l:"古英文（heorcnian）",pr:"HAR-ken",z:"留心傾聽",g:"to listen attentively",e:"Hearken to the sound of the sea.",n:"與 hark、hear 同源。"},
+    {w:"Selcouth",l:"古英文（seldcūþ）",pr:"SEL-kooth",z:"罕見而奇妙的",g:"unfamiliar, rare, strange and marvelous",e:"A selcouth light hovered over the marsh.",n:"seld（罕見）加 cūþ（已知的）。"},
+    {w:"Ineffable",l:"拉丁文字根",pr:"in-EF-uh-bul",z:"無法用言語形容的",g:"too great to be expressed in words",e:"The view left her with an ineffable calm.",n:"in-（不）加 effari（說出）。"},
+    {w:"Ephemeral",l:"希臘文",pr:"ih-FEM-er-ul",z:"短暫即逝的",g:"lasting a very short time",e:"Cherry blossoms are beautiful because they are ephemeral.",n:"ephēmeros 原意是「只持續一天的」。"},
+    {w:"Meander",l:"希臘文",pr:"mee-AN-der",z:"蜿蜒而行；漫無目的地走",g:"to wind or wander",e:"The river meanders through the valley.",n:"來自以彎曲著稱的 Maiandros 河。"}
+  ];
+  var ETYM={},DBPOOL=[];
+  var VLAB={ok:'已對照辭典',note:'已核對，有爭議或年代不一',part:'部分核對',coined:'新創詞（非傳統辭典詞）'};
+  function E(x){var o=ETYM[String(x.w).toLowerCase()];var r={};for(var k in x)r[k]=x[k];if(o)for(var j in o)if(j!=='w'&&o[j]!==''&&o[j]!=null)r[j]=o[j];if(x.uz)r.z=x.uz;if(x.ue)r.e=x.ue;return r}
+  function dictLinks(w){
+    var s=String(w||'').trim(),lo=s.toLowerCase();
+    var a=function(u,t){return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+t+'</a>'};
+    return a('https://www.merriam-webster.com/dictionary/'+encodeURIComponent(lo),'Merriam-Webster')+' · '+a('https://www.etymonline.com/word/'+encodeURIComponent(lo.replace(/\s+/g,'-')),'Etymonline')+' · '+a('https://en.wiktionary.org/wiki/'+encodeURIComponent(s.replace(/\s+/g,'_')),'Wiktionary');
+  }
+  function pron(x){return x.ipa?'/'+esc(x.ipa)+'/':(x.pr?'/ '+esc(x.pr)+' /':'')}
+  function vTag(x){
+    if(!x.v)return '<span class="sm2">此詞尚未對照辭典。'+(x.wk?'Wiktionary 已確認有這個條目。':'')+'</span><span class="sm2">自己核對：'+dictLinks(x.w)+'</span>';
+    var s='<span class="sm2">'+esc(VLAB[x.v]||'')+' · 來源：'+(x.u?'<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.s||'辭典')+'</a>':esc(x.s||''))+'</span>';
+    if(x.ck){
+      var L={pr:'發音',et:'詞源',sh:'流變',us:'用法',ex:'例句',tg:'標籤'},M={ok:'✓',fix:'已修正',unk:'查無來源'},p=[];
+      ['pr','et','sh','us','ex','tg'].forEach(function(k){p.push(L[k]+' '+(x.ck[k]?(M[x.ck[k]]||x.ck[k]):'待核對'))});
+      s+='<span class="sm2">核對'+(x.at?'（'+esc(x.at)+'）':'')+'：'+esc(p.join(' · '))+'</span>';
+    }else s+='<span class="sm2">發音、詞源、流變、用法、標籤尚未核對。</span>';
+    return s;
+  }
+  function wDetail(x){
+    var b='<details class="pd"><summary>詞源・流變・用法・核對'+(x.rv===2?'（完整核對）':'')+'</summary>'+wkMark('w:'+x.w.toLowerCase(),x.w);
+    if(x.n)b+='<span><b>詞源</b>：'+esc(x.n)+'</span>';
+    if(x.sh)b+='<span><b>流變</b>：'+esc(x.sh)+'</span>';
+    if(x.us)b+='<span><b>用法</b>：'+esc(x.us)+'</span>';
+    if(x.pos)b+='<span><b>詞性</b>：'+esc(x.pos)+'</span>';
+    if(x.syn)b+='<span><b>同義詞</b>：'+esc(x.syn)+'</span>';
+    if(x.col)b+='<span><b>常見搭配</b>：'+esc(x.col)+'</span>';
+    var aik=x.ai?Object.keys(x.ai).filter(function(k){return x.ai[k]}):[];
+    if(aik.length)b+='<span class="sm2">Claude 補寫：'+esc(aik.map(aiName).join('、'))+'（未對照辭典）</span>';
+    var mm=minorMiss(x);if(mm.length)b+='<span class="sm2">＊ 尚缺：'+esc(mm.join('、'))+'（不影響「完整」標示，可在編輯區請 Claude 補）</span>';
+    return b+vTag(x)+'</details>';
+  }
+  function hasWord(w){return words.some(function(x){return x.w.toLowerCase()===String(w).toLowerCase()})}
+  function wLookup(){var lk={};WPOOL.concat(DBPOOL).forEach(function(x){lk[x.w.toLowerCase()]=x});Object.keys(xpool||{}).forEach(function(k){lk[k]=xpool[k]});return lk}
+  function wUnits(){return words.map(function(x){return {key:'w:'+x.w.toLowerCase(),k:'w',w:E(x)}})}
+
+  /* ---------- spaced repetition ---------- */
+  function grade(key,ok){
+    var t=today(),s=srs[key];
+    if(!s){s={b:0,n:0};if(newSeen.d!==t)newSeen={d:t,n:0};newSeen.n++;save('newSeen',newSeen)}
+    if(ok)s.b=Math.min(6,s.b===0?2:s.b+1);else s.b=1;
+    s.n=(s.n||0)+1;s.l=t;s.d=addDays(INT[s.b]);
+    srs[key]=s;save('srs',srs);renderProg();
+  }
+  function allUnits(){return pUnits().concat(wUnits())}
+  function buildQueue(){
+    var t=today(),U=allUnits();
+    var due=U.filter(function(u){return srs[u.key]&&srs[u.key].d<=t}).sort(function(a,b){return srs[a.key].d<srs[b.key].d?-1:1}).slice(0,REVMAX);
+    var seen=newSeen.d===t?newSeen.n:0,left=Math.max(0,NEWMAX-seen);
+    var np=U.filter(function(u){return !srs[u.key]&&u.k==='p'}),nw=U.filter(function(u){return !srs[u.key]&&u.k==='w'}),nw2=[];
+    while(nw2.length<left&&(np.length||nw.length)){if(nw.length&&nw2.length<left)nw2.push(nw.shift());if(np.length&&nw2.length<left)nw2.push(np.shift())}
+    return {due:due,nw:nw2};
+  }
+  function migrate(){
+    if(load('mig',0))return;
+    pUnits().forEach(function(u){if(!srs[u.key]&&u.items.some(function(c){return known[c.t]}))srs[u.key]={b:3,n:1,l:today(),d:addDays(3+hashStr(u.key)%7)}});
+    save('srs',srs);try{localStorage.setItem('rp-mig','1')}catch(e){}
+  }
+
+  /* ---------- daily release (5 words + 5 phrases, paused while backlog is full) ---------- */
+  function reserveW(){
+    var lk=wLookup();
+    return Object.keys(lk).filter(function(k){var e=ETYM[k];return e&&e.rv===2&&!hasWord(lk[k].w)&&tray.indexOf(k)<0&&wskip.indexOf(k)<0})
+      .sort(function(a,b){return hashStr(a+rel.d)-hashStr(b+rel.d)});
+  }
+  function unlearnedP(){return pUnits().filter(function(u){return !srs[u.key]}).length}
+  function recAdd(o){
+    if(isOneWord(o.t)){
+      if(!hasWord(o.t)){var wo=toWord(o);words.unshift(wo);colAdd(wo);syncPending(wo);save('words',words)}
+      var dd={};for(var kk in o){if(kk!=='_id')dd[kk]=o[kk]}dd.status='added';o.status='added';
+      try{dbH.doc('rec/'+(o._id||slug(o.t))).set(dd).catch(function(){})}catch(e){}
+      return false;
+    }
+    if(all().some(function(c){return c.t.toLowerCase()===o.t.toLowerCase()}))return false;
+    custom.push({t:o.t,z:o.z||'',p:o.p||'',e:o.e||'',r:o.r||'通用'});save('custom',custom);
+    var pd={},d={};for(var k in o){if(k!=='_id'&&k!=='status'){pd[k]=o[k]}if(k!=='_id')d[k]=o[k]}
+    pd.src='推薦';PHR[o.t.toLowerCase()]=pd;d.status='added';
+    try{dbH.doc('phr/'+slug(o.t)).set(pd).catch(function(){})}catch(e){}
+    try{dbH.doc('rec/'+(o._id||slug(o.t))).set(d).catch(function(){})}catch(e){}
+    return true;
+  }
+  function maybeRelease(){
+    if(!dbReady)return;
+    var t=today();
+    if(rel.d!==t){rel={d:t,w:0,p:0};save('rel',rel)}
+    var ch=false;
+    if(rel.w<WPERDAY&&tray.length<TRAYCAP){
+      var pool=reserveW(),n=Math.min(WPERDAY-rel.w,TRAYCAP-tray.length,pool.length);
+      for(var i=0;i<n;i++){tray.push(pool[i]);rel.w++;ch=true}
+      if(ch){save('tray',tray)}
+    }
+    var pc=false;
+    if(rel.p<PPERDAY){
+      var cand=REC.filter(function(o){return (!o.status||o.status==='new')&&(o.rv===2||pBlank(o).length===0)}),un=unlearnedP();
+      for(var j=0;j<cand.length&&rel.p<PPERDAY;j++){if(recAdd(cand[j])){rel.p++;un++;pc=true}}
+      if(pc){REC=REC.filter(function(o){return !all().some(function(c){return c.t.toLowerCase()===String(o.t).toLowerCase()})})}
+    }
+    if(ch||pc){save('rel',rel);renderProg()}
+  }
+
+  /* ---------- db load ---------- */
+  function colSync(){
+    if(!dbH)return;
+    dbH.collection('col').get().then(function(snap){
+      var have={};snap.docs.forEach(function(d){have[d.id]=1});
+      var want={};
+      words.forEach(function(x){var id=slug(x.w);want[id]=1;if(!have[id]){try{dbH.doc('col/'+id).set({w:x.w,d:x.d||''}).catch(function(){})}catch(e){}}});
+      Object.keys(have).forEach(function(id){if(!want[id]){try{dbH.doc('col/'+id).delete().catch(function(){})}catch(e){}}});
+    }).catch(function(){});
+  }
+  function colAdd(x){if(!dbH)return;try{dbH.doc('col/'+slug(x.w)).set({w:x.w,d:x.d||''}).catch(function(){})}catch(e){}}
+  function colDel(x){if(!dbH)return;try{dbH.doc('col/'+slug(x.w)).delete().catch(function(){})}catch(e){}try{dbH.doc('pending/'+slug(x.w)).delete().catch(function(){})}catch(e){}}
+  function syncPending(o){
+    if(!dbH)return;
+    if(ETYM[String(o.w).toLowerCase()])return;
+    try{dbH.doc('pending/'+slug(o.w)).set({w:o.w,l:o.l||'',pr:o.pr||'',z:o.z||'',g:o.g||'',e:o.e||'',n:o.n||'',src:o.src||'',d:o.d||today(),st:'pending'}).catch(function(){})}catch(e){}
+  }
+  function syncPhr(c){
+    if(!dbH||!phrLoaded)return;
+    var k=String(c.t).toLowerCase();if(PHR[k])return;
+    var d={t:c.t,z:c.z||'',p:c.p||'',e:c.e||'',r:c.r||'',src:'自訂'};if(c.ser){d.ser=c.ser;d.sn=c.sn||''}
+    PHR[k]=d;
+    try{dbH.doc('phr/'+slug(c.t)).set(d).catch(function(){})}catch(e){}
+  }
+  function isOneWord(t){return !/\s/.test(String(t||'').trim())}
+function toWord(c){
+  var o={w:c.t,l:c.l||'',pr:c.pr||'',z:c.z||'',g:c.g||'',e:c.e||'',n:c.n||'',d:today(),src:'由片語庫移入'};
+  ['ipa','us','sh','tg','s','u','ck','at','rv','r'].forEach(function(k){if(c[k]!==undefined&&c[k]!=='')o[k]=c[k]});
+  if(c.p)o.my='原本說法：'+c.p;
+  return o;
+}
+function movePhr(){
+  if(!phrLoaded)return 0;
+  var moved=0;
+  all().forEach(function(c){
+    if(!isOneWord(c.t))return;
+    var k=String(c.t).toLowerCase();
+    if(!hasWord(c.t)){var o=toWord(c);words.unshift(o);colAdd(o);syncPending(o)}
+    if(!c.ser&&srs['p:'+k]){if(!srs['w:'+k])srs['w:'+k]=srs['p:'+k];delete srs['p:'+k]}
+    custom=custom.filter(function(x){return String(x.t).toLowerCase()!==k});
+    if(mv.indexOf(k)<0)mv.push(k);
+    moved++;
+  });
+  if(moved){save('words',words);save('custom',custom);save('srs',srs);save('mv',mv);qz=null}
+  return moved;
+}
+function finishLoad(){try{chkAuto()}catch(e){}dbReady=!!dbH;migrate();var mvd=phrLoaded?movePhr():0;if(mvd)wMsg='已把 '+mvd+' 個單字從片語庫移到單字庫。';if(dbReady)maybeRelease();renderProg();render(cur)}
+  async function loadDb(){
+    if(typeof claude==='undefined'||!claude.use){finishLoad();return}
+    var db=null;
+    try{db=await Promise.race([claude.use('db'),new Promise(function(r){setTimeout(function(){r(null)},10000)})])}catch(e){db=null}
+    if(!db){dbState='資料庫連不上：新詞暫停釋出，進度只存在這個瀏覽器。';finishLoad();return}
+    dbH=db;
+    try{await pullState()}catch(e){}
+    try{await restoreFromDb()}catch(e){}
+    try{
+      var es=await db.collection('etym').get();
+      es.docs.forEach(function(d){var o=d.data();if(o&&o.w){ETYM[String(o.w).toLowerCase()]=o;if(o.aka)ETYM[String(o.aka).toLowerCase()]=o;
+        if(o.pool&&o.z&&!WPOOL.some(function(p){return p.w.toLowerCase()===String(o.w).toLowerCase()}))DBPOOL.push(o)}});
+    }catch(e){dbState='詞源資料讀取失敗，新詞暫停釋出。'}
+    try{var ps=await db.collection('phr').get();ps.docs.forEach(function(d){var o=d.data();if(o&&o.t)PHR[String(o.t).toLowerCase()]=o});phrLoaded=true;custom.forEach(syncPhr)}catch(e){}
+    try{var rs=await db.collection('rec').get();REC=rs.docs.map(function(d){var o=d.data();if(o)o._id=d.id;return o}).filter(function(o){return o&&o.t&&(!o.status||o.status==='new')})}catch(e){}
+    colSync();finishLoad();
+  }
+
+  /* ---------- progress ---------- */
+  function renderProg(){
+    var U=allUnits(),n=U.filter(function(u){return srs[u.key]&&srs[u.key].b>=4}).length;
+    $('#progText').textContent='已掌握 '+n+' / '+U.length;
+    $('#progBar').style.width=(U.length?Math.round(n/U.length*100):0)+'%';
+  }
+
+  /* ---------- navigation ---------- */
+  var GROUPS={today:[['today','今日']],drill:[['flash','片語卡'],['quiz','測驗']],write:[['essay','作文'],['comp','對比']],lib:[['deck','片語庫'],['daily','單字庫'],['graph','圖譜'],['inbox','待升級']]};
+  var cur='today',lastSub={today:'today',drill:'flash',write:'essay',lib:'deck'};
+  function grpOf(n){for(var g in GROUPS){if(GROUPS[g].some(function(x){return x[0]===n}))return g}return 'today'}
+  function render(name){
+    if(name==='today')renderToday();
+    else if(name==='flash')renderFlash();
+    else if(name==='quiz')renderQuiz();
+    else if(name==='essay')renderEssay();
+    else if(name==='comp')renderComp();
+    else if(name==='inbox')renderInbox();
+    else if(name==='daily')renderDaily();
+    else if(name==='deck')renderDeck();
+    else if(name==='graph')renderGraph();
+  }
+  function show(name){
+    cur=name;var g=grpOf(name);lastSub[g]=name;
+    Object.keys(GROUPS).forEach(function(k){$('#t-'+k).setAttribute('aria-selected',k===g?'true':'false')});
+    var subs=GROUPS[g],sb=$('#sub');
+    sb.hidden=subs.length<2;
+    sb.innerHTML=subs.length<2?'':subs.map(function(s){return '<button data-sub="'+s[0]+'" aria-pressed="'+(s[0]===name)+'">'+s[1]+'</button>'}).join('');
+    ['today','flash','quiz','essay','comp','deck','daily','inbox','graph'].forEach(function(p){$('#p-'+p).hidden=(p!==name)});
+    document.querySelector('.wrap').classList.toggle('wide',name==='graph');
+    render(name);
+  }
+  document.querySelector('nav').addEventListener('click',function(e){var b=e.target.closest('button[data-g]');if(b)show(lastSub[b.getAttribute('data-g')])});
+  $('#sub').addEventListener('click',function(e){var b=e.target.closest('button[data-sub]');if(b)show(b.getAttribute('data-sub'))});
+
+  /* ---------- today ---------- */
+  var ses=null;
+  function unitMap(){var m={};allUnits().forEach(function(u){m[u.key]=u});return m}
+  function nextDueDate(){var t=today(),best='';Object.keys(srs).forEach(function(k){var d=srs[k].d;if(d>t&&(!best||d<best))best=d});return best}
+  function trayRow(k){
+    var x=wLookup()[k];if(!x)return '';x=E(x);
+    return '<div class="tr"><div class="ib-h"><span class="w">'+esc(x.w)+'</span><span class="sm2">'+pron(x)+'</span></div>'+
+      '<span class="sm2">'+esc(x.l||'')+'</span><div class="zz">'+esc(x.z)+'</div><div class="dd">'+esc(x.g||'')+'</div>'+tgHtml(x.tg)+
+      (x.e?'<div class="dd" style="font-style:italic;margin-top:4px">'+esc(x.e)+'</div>':'')+(x.v?'':'<span class="sm2" style="display:block;margin-top:6px">未核對'+(x.wk?'（Wiktionary 有此條目）':'')+' · 自己查：'+dictLinks(x.w)+'</span>')+wDetail(x)+
+      '<div class="row"><button class="btn primary" data-t="col" data-k="'+esc(k)+'">收藏</button><button class="btn" data-t="skip" data-k="'+esc(k)+'">略過</button></div></div>';
+  }
+  function renderToday(){
+    if(ses){renderSes();return}
+    maybeRelease();
+    var el=$('#p-today'),t=today(),q=buildQueue(),tot=q.due.length+q.nw.length;
+    var html='<div class="count"><span>'+esc(t)+'</span><span>到期 '+q.due.length+' · 新 '+q.nw.length+'</span></div>';
+    if(tot)html+='<button class="btn primary cta" data-t="start">開始今日複習（'+tot+' 張，約 '+Math.max(1,Math.round(tot*0.4))+' 分鐘）</button>';
+    else{var nd=nextDueDate();html+='<div class="fb" style="margin-top:0"><b>今天的複習完成了。</b>'+(nd?'下一批在 '+esc(nd)+'。':'')+'</div>'}
+    if(dbState)html+='<p class="sm2" style="margin:10px 0 0">'+esc(dbState)+'</p>';
+    html+='<div class="list-h" style="margin-top:24px">待收藏單字 · '+tray.length+(tray.length>TRAYCAP?'':' / '+TRAYCAP)+'</div>'+
+      '<div class="row" style="margin-top:8px"><button class="btn primary" data-t="more"'+(moreBusy?' disabled':'')+'>'+(moreBusy?'找詞中…':'來點單字')+'</button></div>'+
+      (moreMsg?'<p class="sm2" role="status" style="margin:6px 0 0">'+esc(moreMsg)+'</p>':'');
+    if(!tray.length){
+      html+='<p class="empty">'+(!dbReady?'新詞讀取中，或目前連不上資料庫。':(rel.w>=WPERDAY?'今天的 '+WPERDAY+' 個新詞都處理完了，明天會再補。':'備選區暫時沒有已核對的新詞，核對完成後會自動出現。'))+'</p>';
+    }else{
+      if(tray.length>=TRAYCAP)html+='<p class="sm2" style="margin:6px 0 0">待收藏已滿 '+TRAYCAP+' 個，先收藏或略過一些，才會繼續補新詞。</p>';
+      tray.forEach(function(k){html+=trayRow(k)});
+    }
+    var un=unlearnedP();
+    html+='<div class="list-h" style="margin-top:24px">新片語</div><p class="sm2" style="margin:6px 0 0">'+
+      (rel.p>0?'今天新增了 '+rel.p+' 個片語到片語庫。':'今天還沒有新增片語。')+
+      (rel.p<PPERDAY&&dbReady?'備選區暫時沒有可用的新片語（欄位都填滿的才會進來），可請 Claude 補貨。':'')+(un>0?' 另有 '+un+' 個片語還沒複習過。':'')+'</p>';
+    html+='<div class="row"><button class="btn" data-t="goquiz">來一輪測驗</button><button class="btn" data-t="goessay">寫一篇作文</button></div>';
+    el.innerHTML=html;
+  }
+  var moreBusy=false,moreMsg='';
+  async function checkWik(w){
+    var n0=String(w).trim().replace(/\s+/g,'_'),names=[n0],lo=n0.toLowerCase();if(lo!==n0)names.push(lo);
+    for(var i=0;i<names.length;i++){
+      try{
+        var ac=new AbortController(),tm=setTimeout(function(){ac.abort()},6000);
+        var r=await fetch('https://en.wiktionary.org/api/rest_v1/page/summary/'+encodeURIComponent(names[i]),{signal:ac.signal});
+        clearTimeout(tm);
+        if(r.ok)return 'yes';
+        if(r.status!==404)return 'unknown';
+      }catch(e){return 'unknown'}
+    }
+    return 'no';
+  }
+  var chkBusy=false,chkAutoDone=false,chkStop=false;
+  function wtClean(s){
+    var t=String(s||''),p;
+    t=t.replace(/\{\{(?:inh|der|bor|lbor|slb|cal|pcal|psm|noncog|cog|ncog)\|[a-z-]+\|([a-zA-Z-]+)\|([^|}=]*)[^}]*\}\}/g,'〈$1 $2〉')
+      .replace(/\{\{(?:lb|lbl|label)\|[a-z-]+\|([^}]*)\}\}/g,function(m,a){return '('+a.split('|').filter(function(q){return q.indexOf('=')<0}).join(', ')+')'})
+      .replace(/\{\{(?:l|m|w|link|mention|m-self|l-self|vern|ll)\|[a-z-]+\|([^|}=]*)[^}]*\}\}/g,'$1');
+    for(var i=0;i<3;i++)t=t.replace(/\{\{[^{}]*\}\}/g,'');
+    return t.replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g,'$1').replace(/'{2,}/g,'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+  }
+  function wtParse(sec){
+    var o={ipa:'',pos:[],syn:[],df:[],et:''},pm={'noun':'n.','verb':'v.','adjective':'adj.','adverb':'adv.','preposition':'prep.','conjunction':'conj.','interjection':'interj.','pronoun':'pron.','proper noun':'proper n.','phrase':'phr.','idiom':'idiom','proverb':'proverb','prepositional phrase':'phr.','determiner':'det.','particle':'part.'},ipl=[];
+    sec.split('\n').forEach(function(ln){
+      var h=ln.match(/^={3,4}\s*([^=]+?)\s*={3,4}\s*$/);
+      if(h){var key=h[1].toLowerCase();if(pm[key]&&o.pos.indexOf(pm[key])<0)o.pos.push(pm[key]);return}
+      if(/\{\{IPA\|en\|/.test(ln))ipl.push(ln);
+      if(/^#\s/.test(ln)&&o.df.length<2){var d=wtClean(ln.replace(/^#\s*/,''));if(d.length>3)o.df.push(d.slice(0,160))}
+      var re=/\{\{(?:syn|synonyms)\|en\|([^}]*)\}\}/g,m;
+      while((m=re.exec(ln))){m[1].split('|').forEach(function(q){q=q.trim();if(q&&q.indexOf('=')<0&&o.syn.indexOf(q)<0&&o.syn.length<4)o.syn.push(q)})}
+    });
+    var pick=ipl.filter(function(l){return /US|GA|General American/.test(l)})[0]||ipl[0];
+    if(pick){var im=pick.match(/\{\{IPA\|en\|([^}]*)\}\}/);if(im){var sl=im[1].split('|').filter(function(q){return q.charAt(0)==='/'})[0];if(sl)o.ipa=sl.replace(/\//g,'').trim()}}
+    var em=sec.match(/===\s*Etymology[^=\n]*===\s*\n([\s\S]*?)(?=\n===|$)/);
+    if(em)o.et=wtClean(em[1]).slice(0,500);
+    return o;
+  }
+  async function wkFetch(w){
+    var base=String(w).trim().replace(/\s+/g,' '),names=[base],lo=base.toLowerCase();if(lo!==base)names.push(lo);
+    for(var i=0;i<names.length;i++){
+      try{
+        var ac=new AbortController(),tm=setTimeout(function(){ac.abort()},8000);
+        var r=await fetch('https://en.wiktionary.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&redirects=1&format=json&formatversion=2&origin=*&titles='+encodeURIComponent(names[i]),{signal:ac.signal});
+        clearTimeout(tm);
+        if(!r.ok)return {s:'unknown'};
+        var j=await r.json(),p=j&&j.query&&j.query.pages&&j.query.pages[0];
+        if(!p||p.missing)continue;
+        var rv=p.revisions&&p.revisions[0],txt=(rv&&rv.slots&&rv.slots.main&&rv.slots.main.content)||'';
+        var a=txt.search(/(^|\n)==English==/);
+        if(a<0)return {s:'no'};
+        var sec=txt.slice(a),b=sec.slice(12).search(/\n==[^=]/);if(b>=0)sec=sec.slice(0,b+12);
+        var o=wtParse(sec);o.s='yes';return o;
+      }catch(e){return {s:'unknown'}}
+    }
+    return {s:'no'};
+  }
+  async function chkJudge(ch,isW){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');if(!sample)throw {code:'unavailable'};
+    var fs=isW?['z','e','g','n']:['z','e','g','us'];
+    var items=ch.map(function(it){var o=isW?E(it.o):it.o,en={};fs.forEach(function(f){en[f]=String(o[f]||'')});var ev=it.ev;return {k:it.k,item:it.n,entry:en,dict:ev&&ev.s==='yes'?{ipa:ev.ipa,pos:ev.pos,defs:ev.df,etymology:ev.et}:null}});
+    var prompt='You are a strict fact-checker for an English notebook used by a Traditional Chinese speaker. For each item compare "entry" with "dict" (Wiktionary excerpts; null means Wiktionary has no entry, so judge from well-established knowledge only). Fields: z = Traditional Chinese meaning, e = example sentence (must be grammatical and use the item naturally), g = short English gloss, n = etymology note, us = usage note. For every non-empty field in entry answer "ok" if consistent with dict or established knowledge, "bad" if it conflicts or is wrong, "unk" if you cannot tell; skip empty fields. Never invent. For a "bad" field also give a corrected short replacement in "fix" (Traditional Chinese for z, n, us; English for e, g), and add a one-sentence Traditional Chinese "note" saying what is wrong. If "dict" is null, Wiktionary had no page for that item, so ALSO add a "lookup" object to it: {"exists":"yes"|"unsure"|"no","spelling":"<the correct standard spelling if the given one looks misspelled, else empty>","note":"<one Traditional Chinese sentence: is it a real English word or phrase, what it means, and the key etymology or usage point; say plainly if you are not sure>"}. Return ONLY a JSON array with no markdown, e.g. [{"k":"<k as given>","z":"ok","e":"bad","note":"...","fix":{"e":"..."}}]. Items: '+JSON.stringify(items);
+    var res=await sample(prompt,{cache:false,modelTier:'default'});
+    var data=parseJson(res&&res.text);
+    if(!Array.isArray(data))throw {code:'parse'};
+    return data;
+  }
+  function wkMark(k,w){
+    var v=wkc[k];if(!v)return '';if(typeof v==='string')v={s:v};
+    var L={z:'中文意思',e:'例句',g:'釋義',n:'詞源',us:'用法'},lk='<a href="https://en.wiktionary.org/wiki/'+encodeURIComponent(String(w).trim().replace(/\s+/g,'_'))+'" target="_blank" rel="noopener noreferrer">Wiktionary</a>';
+    var h='<span class="sm2"><b>自動查核</b>'+(v.at?'（'+esc(v.at)+'）':'')+'：'+(v.s==='yes'?lk+' 有此條目':'Wiktionary 查無此條，已改請 Claude 查詢（憑知識回答，沒對照辭典頁面）；自己查：'+dictLinks(w))+'</span>';
+    if(v.j){var p=Object.keys(v.j).map(function(f){return (L[f]||f)+' '+(v.j[f]==='ok'?'✓':v.j[f]==='bad'?'有疑':'無從判斷')});if(p.length)h+='<span class="sm2">'+esc(p.join(' · '))+'</span>'}
+    if(v.cl){h+='<span class="sm2"><b>Claude 查詢</b>：'+(v.cl.ex==='yes'?'認為是正規用法':v.cl.ex==='no'?'認為不是標準英文':'不太確定')+(v.cl.sp?'；可能的正確拼法：'+esc(v.cl.sp):'')+(v.cl.note?'。'+esc(v.cl.note):'')+'</span>'}if(v.note)h+='<span class="sm2">⚠ '+esc(v.note)+'</span>';
+    if(v.fixed&&v.fixed.length)h+='<span class="sm2">已自動修正（先前由 Claude 補的）：'+esc(v.fixed.join('、'))+'</span>';
+    if(v.filled&&v.filled.length)h+='<span class="sm2">已由辭典補上：'+esc(v.filled.join('、'))+'</span>';
+    if(v.s==='yes'&&v.df&&v.df.length)h+='<span class="sm2">辭典釋義：'+esc(v.df.join('；'))+'</span>';
+    return h;
+  }
+  function chkAuto(){
+    if(chkAutoDone)return;chkAutoDone=true;
+    setTimeout(function(){chkRun('w',true).then(function(){return chkRun('p',true)}).catch(function(){})},5000);
+  }
+  async function chkRun(kind,auto){
+    if(chkBusy)return;
+    var isW=kind==='w',pool=isW?words:all(),items=[];
+    pool.forEach(function(o){
+      if(isW?(!o||!o.w||E(o).v):(!o||!o.t||o.ck))return;
+      items.push({k:(isW?'w:'+o.w:'p:'+o.t).toLowerCase(),n:isW?o.w:o.t,o:o});
+    });
+    var rd=function(){if(auto){var ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return}if(isW)renderDaily();else renderDeck()};
+    var put=function(m){if(isW){wMsg=m;var e=$('#wmsg');if(e)e.textContent=m}else{pbMsg=m;var e2=$('#pmsg');if(e2)e2.textContent=m}};
+    var todo=items.filter(function(it){var d=wkc[it.k];return !(d&&typeof d==='object'&&d.s&&d.j&&(d.s!=='no'||d.cl))});
+    if(!todo.length&&!auto)todo=items;
+    todo=todo.slice(0,auto?25:400);chkStop=false;
+    if(!todo.length){if(!auto){put('沒有需要查核的項目（已對照辭典的不用再查）。');rd()}return}
+    chkBusy=true;if(!auto){put('查核中… 0 / '+todo.length);rd()}
+    var st={yes:0,no:0,un:0,bad:0,fixed:0,filled:0},noS=false,td=today();
+    for(var i=0;i<todo.length&&!chkStop;i+=5){
+      var ch=todo.slice(i,i+5),judged={};
+      for(var j=0;j<ch.length;j++)ch[j].ev=await wkFetch(ch[j].n);
+      if(!noS){
+        try{(await chkJudge(ch,isW)).forEach(function(r){if(r&&r.k)judged[String(r.k).toLowerCase()]=r})}
+        catch(err){if(err&&(err.code==='unavailable'||err.code==='not_granted'||err.code==='rate_limited'))noS=true}
+      }
+      ch.forEach(function(it){
+        var ev=it.ev;if(!ev||ev.s==='unknown'){st.un++;return}
+        var rec={s:ev.s,at:td},jr=judged[it.k];
+        if(ev.s==='yes'){rec.df=ev.df;rec.ipa=ev.ipa;rec.pos=ev.pos;rec.syn=ev.syn;rec.et=ev.et;st.yes++}else st.no++;
+        if(jr){rec.j={};['z','e','g','n','us'].forEach(function(f){if(jr[f]!=null&&String(jr[f]).trim()){var v=String(jr[f]).toLowerCase();rec.j[f]=v==='ok'?'ok':v==='bad'?'bad':'unk'}});if(jr.note)rec.note=String(jr.note).slice(0,200);if(jr.lookup&&ev.s!=='yes'){var lu=jr.lookup;rec.cl={ex:String(lu.exists||'unsure'),sp:String(lu.spelling||'').slice(0,60),note:String(lu.note||'').slice(0,240)}}if(Object.keys(rec.j).some(function(f){return rec.j[f]==='bad'}))st.bad++}
+        if(isW){
+          var x=it.o;rec.fixed=[];rec.filled=[];
+          if(ev.s==='yes'){
+            var e0=E(x);
+            if(!e0.ipa&&ev.ipa&&!wLocked(x,'pr')){x.ipa=ev.ipa;rec.filled.push('發音')}
+            if(!String(e0.pos||'').trim()&&ev.pos.length&&!wLocked(x,'pos')){x.pos=ev.pos.join(' / ');rec.filled.push('詞性')}
+            if(!String(e0.syn||'').trim()&&ev.syn.length&&!wLocked(x,'syn')){x.syn=ev.syn.join(', ');rec.filled.push('同義詞')}
+            if(!String(e0.g||'').trim()&&ev.df.length&&!wLocked(x,'g')){x.g=ev.df[0];rec.filled.push('釋義')}
+          }
+          if(jr&&jr.fix&&rec.j){
+            var bad=Object.keys(rec.j).filter(function(f){return rec.j[f]==='bad'&&x.ai&&x.ai[f]&&jr.fix[f]});
+            if(bad.length){aiApply(x,jr.fix,bad,true).forEach(function(f){rec.fixed.push(aiName(f));st.fixed++})}
+          }
+          st.filled+=rec.filled.length;
+        }
+        wkc[it.k]=rec;
+      });
+      save('wkc',wkc);if(isW)save('words',words);
+      if(!auto)put('查核中… '+Math.min(i+5,todo.length)+' / '+todo.length);
+    }
+    chkBusy=false;
+    put((auto?'自動':'')+(chkStop?'已停止，前面查過的都已存好（再按一次會接著查）。本輪預計 ':'查核完成：')+todo.length+' 個（Wiktionary 有條目 '+st.yes+'、查無 '+st.no+(st.un?'、這次連不上 '+st.un+'，下次會再試':'')+'）'+(noS?'；Claude 判讀這次沒開成，只做了條目對照':'；對照辭典判讀，有疑 '+st.bad+' 個')+(st.filled?'；由辭典補上 '+st.filled+' 個欄位':'')+(st.fixed?'；自動修正 '+st.fixed+' 個先前由 Claude 補的欄位':'')+'。');
+    rd();
+  }
+  function wkMarkOld(k,w){var v=wkc[k];if(v==='yes')return '<span class="sm2">一鍵查核：Wiktionary 有此條目 ✓</span>';if(v==='no')return '<span class="sm2">一鍵查核：Wiktionary 查無此條（不代表錯，請自己查）：'+dictLinks(w)+'</span>';return ''}
+  async function chkRunOld(kind){
+    if(chkBusy)return;
+    var items=kind==='w'?words.map(function(x){return {k:'w:'+x.w.toLowerCase(),n:x.w}}):all().map(function(c){return {k:'p:'+String(c.t).toLowerCase(),n:c.t}});
+    var rd=function(){if(kind==='w')renderDaily();else renderDeck()};
+    var put=function(m){if(kind==='w'){wMsg=m;var e=$('#wmsg');if(e)e.textContent=m}else{pbMsg=m;var e2=$('#pmsg');if(e2)e2.textContent=m}};
+    if(!items.length){put('沒有可查核的項目。');rd();return}
+    chkBusy=true;put('查核中… 0 / '+items.length);rd();
+    var y=0,no=[],un=0;
+    for(var i=0;i<items.length;i++){
+      var r=await checkWik(items[i].n);
+      if(r==='yes'){wkc[items[i].k]='yes';y++}else if(r==='no'){wkc[items[i].k]='no';no.push(items[i].n)}else un++;
+      if(i%5===4){save('wkc',wkc);put('查核中… '+(i+1)+' / '+items.length)}
+    }
+    save('wkc',wkc);chkBusy=false;
+    put('查核完成（對照 Wiktionary）：'+y+' 個有條目'+(no.length?'，'+no.length+' 個查無（'+no.slice(0,8).join('、')+(no.length>8?'…':'')+'；不代表一定有錯，卡片上有連結可自己查）':'')+(un?'，'+un+' 個這次連不上，可再按一次':'')+'。');
+    rd();
+  }
+  async function moreWords(){
+    
+    var pool=reserveW();
+    if(pool.length){
+      var n=Math.min(5,pool.length);
+      for(var i=0;i<n;i++)tray.push(pool[i]);
+      save('tray',tray);moreMsg='從備選區加了 '+n+' 個已核對過的新詞。';renderToday();return;
+    }
+    moreBusy=true;moreMsg='備選區是空的，請 Claude 想幾個新詞…';renderToday();
+    var got=0,tries=0,want=3;
+    try{
+      while(got<want&&tries<8){
+        tries++;
+        var x=await askWord(),k=String(x.w).toLowerCase();
+        if(hasWord(x.w)||tray.indexOf(k)>=0||wskip.indexOf(k)>=0||xpool[k])continue;
+        var ckw=await checkWik(x.w);if(ckw==='no')continue;if(ckw==='yes')x.wk=1;
+        x.src='Claude 想的新詞（未對照辭典）';xpool[k]=x;tray.push(k);got++;
+        save('xpool',xpool);save('tray',tray);moreMsg='已加 '+got+' 個…';renderToday();
+      }
+      moreMsg=got?'請 Claude 想了 '+got+' 個新詞（未對照辭典，請用下方連結自己核對）。':'這次沒有拿到新詞，再按一次試試。';
+    }catch(err){moreMsg=got?'已加 '+got+' 個，之後停下：'+wErr(err):wErr(err)}
+    moreBusy=false;renderToday();
+  }
+  function startSes(){
+    var q=buildQueue();var keys=q.due.concat(q.nw).map(function(u){return u.key});
+    if(!keys.length)return;
+    ses={q:keys,i:0,fl:false,ok:0,no:0,rq:{}};renderToday();
+  }
+  function renderSes(){
+    var el=$('#p-today');
+    if(ses.i>=ses.q.length){
+      el.innerHTML='<div class="q">複習完成</div><div class="fb"><b>想起來 '+ses.ok+' 次</b>，沒想起來 '+ses.no+' 次。沒想起來的明天會再出現。</div>'+
+        '<div class="row"><button class="btn primary" data-t="endses">回到今日</button></div>';
+      return;
+    }
+    var um=unitMap(),u=um[ses.q[ses.i]];
+    if(!u){ses.i++;renderSes();return}
+    var front,back,detail='',tall='';
+    if(u.k==='p'){
+      var its=u.items,c0=its[0];
+      if(its.length>1){
+        tall=' tall';
+        var ps={};its.forEach(function(c){if(c.p)ps[c.p]=1});
+        front='<span class="tag ink">原本的說法（'+esc(u.sn||'同義系列')+'）</span><span class="big ink-t">'+esc(Object.keys(ps).join(' / ')||c0.z)+'</span><span class="hint">想想看，有哪些更道地的說法？點一下翻面</span>';
+      }else front='<span class="tag ink">原本的說法</span><span class="big ink-t">'+esc(c0.p||c0.z)+'</span><span class="hint">想想看，更道地怎麼說？點一下翻面</span>';
+      back='<span class="tag red">更道地'+(its.length>1?'（'+its.length+' 種說法）':'')+'</span>'+its.map(function(c){
+        return '<span class="big red-t" style="font-size:30px">'+esc(c.t)+'</span><span class="sm2">'+esc(c.r)+(c.ipa?' · /'+esc(c.ipa)+'/':'')+'</span><span class="zh">'+esc(c.z)+'</span><span class="ex">'+hl(c)+'</span>'+tgHtml(c.tg)}).join('');
+      if(ses.fl)detail=its.map(function(c){return '<div style="margin-top:8px"><b class="red-t">'+esc(c.t)+'</b>'+pTag(c)+'</div>'}).join('');
+    }else{
+      var x=u.w;
+      front='<span class="tag ink">'+esc(x.l||'單字')+'</span><span class="big red-t">'+esc(x.w)+'</span><span class="sm2">'+pron(x)+'</span><span class="hint">還記得意思嗎？點一下翻面</span>';
+      back='<span class="tag red">'+esc(x.w)+'</span><span class="zh">'+esc(x.z)+'</span><span class="ex">'+esc(x.g||'')+'</span><span class="ex" style="font-style:italic">'+esc(x.e||'')+'</span>'+tgHtml(x.tg);
+      if(ses.fl)detail=wDetail(x);
+    }
+    el.innerHTML='<div class="count"><span>'+(ses.i+1)+' / '+ses.q.length+'</span><span>'+(u.k==='w'?'單字':'片語')+(srs[u.key]?'':' · 新')+'</span></div>'+
+      '<button class="card rv'+tall+(ses.fl?' flipped':'')+'" id="rvcard" aria-label="翻面"><span class="face front">'+front+'</span><span class="face back">'+back+'</span></button>'+
+      (ses.fl?'<div class="row"><button class="btn" data-t="no">沒想起來</button><button class="btn primary" data-t="yes">想起來了</button></div>':'<div class="row"><button class="btn primary" data-t="flip">翻面看答案</button></div>')+
+      detail+'<div class="row"><button class="btn sm" data-t="endses">先到這裡</button></div>';
+  }
+  $('#p-today').addEventListener('click',function(e){
+    var rc=e.target.closest('#rvcard');
+    if(rc&&ses){ses.fl=!ses.fl;renderSes();return}
+    var b=e.target.closest('button[data-t]');if(!b)return;
+    var a=b.getAttribute('data-t');
+    if(a==='start')startSes();
+    else if(a==='flip'&&ses){ses.fl=true;renderSes()}
+    else if((a==='yes'||a==='no')&&ses){
+      var key=ses.q[ses.i],ok=a==='yes';
+      grade(key,ok);if(ok)ses.ok++;else{ses.no++;if(!ses.rq[key]){ses.rq[key]=1;ses.q.push(key)}}
+      ses.i++;ses.fl=false;renderSes();
+    }
+    else if(a==='endses'){ses=null;renderToday()}
+    else if(a==='col'){
+      var k=b.getAttribute('data-k'),x=wLookup()[k];
+      if(x){var o={};var ee=E(x);for(var f in ee)o[f]=ee[f];o.d=today();o.src=o.src||'每日新詞';if(!hasWord(o.w)){words.unshift(o);save('words',words);colAdd(o);syncPending(o)}}if(xpool[k]){delete xpool[k];save('xpool',xpool)}
+      tray=tray.filter(function(z){return z!==k});save('tray',tray);renderProg();renderToday();
+    }
+    else if(a==='skip'){var k2=b.getAttribute('data-k');if(xpool[k2]){delete xpool[k2];save('xpool',xpool)}tray=tray.filter(function(z){return z!==k2});save('tray',tray);if(wskip.indexOf(k2)<0){wskip.push(k2);save('wskip',wskip)}renderToday()}
+    else if(a==='more'&&!moreBusy){moreWords()}
+    else if(a==='goquiz')show('quiz');
+    else if(a==='goessay')show('essay');
+  });
+
+  /* ---------- flashcards (free browsing) ---------- */
+  var pos=0,flipped=false,weakOnly=false,order=null,regF='all';
+  function deck(){
+    var a=all();
+    if(order){a=a.slice().sort(function(x,y){return (order[x.t]||0)-(order[y.t]||0)})}
+    if(regF!=='all')a=a.filter(function(c){return c.r===regF});
+    return weakOnly?a.filter(function(c){return !known[c.t]}):a;
+  }
+  function renderFlash(){
+    var list=deck(),el=$('#p-flash');
+    var filt='<label class="filter"><input type="checkbox" id="weak"'+(weakOnly?' checked':'')+'> 只看待加強</label>';
+    var segR='<div class="seg" role="group" aria-label="場合">'+['all'].concat(REGS).map(function(v){return '<button data-reg="'+v+'" aria-pressed="'+(regF===v)+'">'+(v==='all'?'全部':v)+'</button>'}).join('')+'</div>';
+    if(!list.length){el.innerHTML=segR+'<p class="empty">這個範圍沒有待加強的片語了。取消「只看待加強」或換個場合繼續複習。</p>'+filt;return}
+    if(pos>=list.length)pos=0;
+    var c=list[pos];
+    el.innerHTML=
+      segR+'<div class="count"><span>'+(pos+1)+' / '+list.length+' · '+esc(c.r)+'</span><span>'+(known[c.t]?'已掌握':'待加強')+'</span></div>'+
+      '<button class="card'+(flipped?' flipped':'')+'" id="card" aria-label="翻面">'+
+        '<span class="face front"><span class="tag ink">原本的說法</span><span class="big ink-t">'+esc(c.p||c.z)+'</span><span class="hint">想想看，更道地怎麼說？點一下翻面</span></span>'+
+        '<span class="face back"><span class="tag red">更道地</span><span class="big red-t">'+esc(c.t)+'</span><span class="zh">'+esc(c.z)+'</span><span class="ex">'+hl(c)+'</span>'+sibTag(c)+'</span>'+
+      '</button>'+
+      '<div class="row"><button class="btn" data-a="prev">上一張</button><button class="btn" data-a="again">再練</button><button class="btn primary" data-a="got">記住了</button><button class="btn" data-a="next">下一張</button></div>'+
+      '<div class="row"><button class="btn" data-a="shuffle">隨機排序</button></div>'+filt;
+  }
+  $('#p-flash').addEventListener('click',function(e){
+    var rg=e.target.closest('[data-reg]');
+    if(rg){regF=rg.getAttribute('data-reg');pos=0;flipped=false;renderFlash();return}
+    if(e.target.closest('#card')){flipped=!flipped;var c=$('#card');if(c)c.classList.toggle('flipped',flipped);return}
+    var b=e.target.closest('button[data-a]');
+    if(b){
+      var list=deck(),a=b.getAttribute('data-a'),cur2=list[pos];
+      if(a==='prev'){pos=(pos-1+list.length)%list.length}
+      else if(a==='next'){pos=(pos+1)%list.length}
+      else if(a==='again'){if(cur2){known[cur2.t]=false;save('known',known);grade(uk(cur2),false)}pos=(pos+1)%list.length}
+      else if(a==='got'){if(cur2){known[cur2.t]=true;save('known',known);grade(uk(cur2),true)}if(!weakOnly)pos=(pos+1)%list.length}
+      else if(a==='shuffle'){order={};all().forEach(function(c){order[c.t]=Math.random()});pos=0}
+      flipped=false;renderProg();renderFlash();return;
+    }
+  });
+  $('#p-flash').addEventListener('change',function(e){
+    if(e.target.id==='weak'){weakOnly=e.target.checked;pos=0;flipped=false;renderFlash()}
+  });
+
+  /* ---------- quiz ---------- */
+  var qz=null;
+  function startQuiz(){
+    var a=all(),n=Math.min(10,a.length);
+    var qs=shuf(a.slice()).slice(0,n).map(function(c){
+      var ok=function(x){return x!==c&&x.t!==c.t&&!sameConcept(c,x)};var same=shuf(a.filter(function(x){return ok(x)&&x.r===c.r})),rest=shuf(a.filter(function(x){return ok(x)&&x.r!==c.r}));
+      var others=same.concat(rest).slice(0,3);
+      return {c:c,opts:shuf([c].concat(others))};
+    });
+    qz={qs:qs,i:0,score:0,picked:null};
+  }
+  function renderQuiz(){
+    var el=$('#p-quiz');
+    if(all().length<2){el.innerHTML='<p class="empty">至少要有 2 個片語才能測驗。</p>';return}
+    if(!qz)startQuiz();
+    if(qz.i>=qz.qs.length){
+      el.innerHTML='<p class="q">'+qz.score+' / '+qz.qs.length+' 題答對</p><p class="empty" style="padding-top:0">答錯的片語已排進明天的複習。</p><div class="row"><button class="btn primary" data-q="again">再測一輪</button></div>';
+      return;
+    }
+    var q=qz.qs[qz.i],c=q.c;
+    var html='<div class="count"><span>第 '+(qz.i+1)+' / '+qz.qs.length+' 題</span><span>答對 '+qz.score+'</span></div>'+
+      '<div class="tag ink">哪個說法比這句更道地？（場合：'+esc(c.r)+'）</div><div class="q">'+esc(c.p||c.z)+'</div>';
+    q.opts.forEach(function(o,i){
+      var cls='opt';
+      if(qz.picked!==null){if(o===c)cls+=' right';else if(i===qz.picked)cls+=' wrong'}
+      html+='<button class="'+cls+'" data-o="'+i+'"'+(qz.picked!==null?' disabled':'')+'>'+esc(o.t)+'</button>';
+    });
+    if(qz.picked!==null){
+      html+='<div class="fb"><b>'+esc(c.t)+'</b>　'+esc(c.z)+'<br>'+hl(c)+sibTag(c)+'</div>'+
+        '<div class="row"><button class="btn primary" data-q="next">'+(qz.i+1>=qz.qs.length?'看結果':'下一題')+'</button></div>';
+    }
+    el.innerHTML=html;
+  }
+  $('#p-quiz').addEventListener('click',function(e){
+    var o=e.target.closest('button[data-o]');
+    if(o&&qz&&qz.picked===null){
+      var i=+o.getAttribute('data-o'),q=qz.qs[qz.i];
+      qz.picked=i;
+      if(q.opts[i]===q.c){qz.score++}else{known[q.c.t]=false;save('known',known);grade(uk(q.c),false)}
+      renderQuiz();return;
+    }
+    var b=e.target.closest('button[data-q]');
+    if(b){
+      if(b.getAttribute('data-q')==='again'){startQuiz()}
+      else{qz.i++;qz.picked=null}
+      renderQuiz();
+    }
+  });
+
+  /* ---------- essay ---------- */
+  var essayMode='daily';
+  var SITU=[
+    ['日記','Write a diary entry about a small thing that went better than you expected today.'],
+    ['書信','Write a short message to a colleague asking for help with a task, and explain why it matters.'],
+    ['敘事','Describe a place you go when you need to think, and what it does for you.'],
+    ['論述','Some people prefer to plan everything; others like to improvise. Which do you prefer, and why?'],
+    ['書信','Write an email to a friend you have not seen in a long time, catching them up on your life.'],
+    ['敘事','Tell the story of a mistake that taught you something useful.'],
+    ['論述','Is it better to specialize in one skill or to learn many things? Give your view.'],
+    ['日記','Write about a conversation today that stayed in your mind.'],
+    ['商務','Write a short update to your team about the progress of a project and the next step.'],
+    ['敘事','Describe a person who changed the way you think about something.'],
+    ['論述','Do you think technology makes people more connected or more alone? Explain.'],
+    ['商務','Write a polite message declining a request while offering an alternative.'],
+    ['敘事','Describe a meal or a smell that takes you back to a particular time in your life.'],
+    ['日記','Write about something you are trying to get better at, and how it is going.'],
+    ['論述','Should schools teach students how to manage money? Give reasons.'],
+    ['敘事','Describe a small decision that turned out to matter more than you thought.']
+  ];
+  var dq=load('dq',{d:'',n:0}),dtxt=load('dtxt',{d:'',t:''});
+  function dailyPick(){
+    var t=today();if(dq.d!==t){dq={d:t,n:0};save('dq',dq)}
+    var seed=hashStr(t+'#'+dq.n),ws=words.map(E),ph=all();
+    var w=ws.length?ws[seed%ws.length]:null;
+    var c=ph.length?ph[Math.floor(seed/7)%ph.length]:null;
+    var sit=SITU[Math.floor(seed/13)%SITU.length];
+    var dai=load('dai',{k:'',s:null});if(dai.k===t+'#'+dq.n&&dai.s)sit=dai.s;
+    return {seed:seed,w:w,c:c,sit:sit};
+  }
+  function wRx(w){try{return new RegExp('\\b'+reEsc(String(w).replace(/[eyd]$/i,''))+'\\w*','i')}catch(e){return /$^/}}
+  function renderDailyEssay(){
+    var pk=dailyPick(),el=$('#essayBody');
+    var t=today(),key=t+'#'+dq.n;if(dtxt.d!==key){dtxt={d:key,t:''}}
+    el.innerHTML=
+      '<div class="prompt"><div class="tag red">今日小作文 · '+esc(pk.sit[0])+'（第 '+(dq.n+1)+' 題）</div>'+
+      '<p class="q" style="font-size:22px;margin:4px 0 8px">'+esc(pk.sit[1])+'</p>'+
+      '<p class="req">80–120 字。請在文中用上：'+
+      (pk.w?'<b>'+esc(pk.w.w)+'</b>（'+esc(pk.w.z||'')+'）':'')+(pk.w&&pk.c?' 與 ':'')+(pk.c?'<b>'+esc(pk.c.t)+'</b>（'+esc(pk.c.z||'')+'）':'')+'。</p></div>'+
+      '<textarea id="dessay" placeholder="在這裡寫…" aria-label="今日小作文"></textarea>'+
+      '<div class="meta"><span id="dwc">0 字</span><span id="dused"></span></div>'+
+      '<div class="row"><button class="btn" data-e="redraw">再抽一題</button><button class="btn" data-e="dai"'+(genBusy?' disabled':'')+'>'+(genBusy?'Claude 出題中…':'請 Claude 出新題')+'</button><button class="btn" data-e="dcopy">複製，貼給 Claude 批改</button></div>'+
+      (genMsg?'<div class="fb">'+esc(genMsg)+'</div>':'')+
+      '<p class="sm2" style="margin:8px 0 0">「再抽一題」從題庫換；「請 Claude 出新題」每次產生一題全新的。寫到一半的內容會跟著題目保存。</p>';
+    var ta=$('#dessay');ta.value=dtxt.t;
+    window.__dpk=pk;updateDaily();
+  }
+  function updateDaily(){
+    var ta=$('#dessay');if(!ta)return;var pk=window.__dpk||dailyPick(),txt=ta.value;
+    var wds=(txt.match(/[A-Za-z0-9'’-]+/g)||[]).length,u=[];
+    if(pk.w)u.push((wRx(pk.w.w).test(txt)?'✓ ':'· ')+pk.w.w);
+    if(pk.c)u.push((rxOf(pk.c).test(txt)?'✓ ':'· ')+pk.c.t);
+    $('#dwc').textContent=wds+' 字（目標 80–120）';$('#dused').textContent=u.join('　');
+    dtxt={d:today()+'#'+dq.n,t:txt};save('dtxt',dtxt);
+  }
+  var essayReg='口語',lp=null,genBusy=false,genMsg='';
+  function lpS(){if(!lp)lp=load('lp',{});return lp}
+  function curPrompt(){
+    var s=lpS()[essayReg],pool=PROMPTS[essayReg];
+    if(!s){s={i:Math.floor(Math.random()*pool.length)};lp[essayReg]=s;save('lp',lp)}
+    if(s.ai)return {q:s.ai.q,r:s.ai.r,ai:true};
+    var p=pool[s.i%pool.length];return {q:p[0],r:p[1]};
+  }
+  function nextPrompt(){
+    var s=lpS()[essayReg]||{i:0},n=PROMPTS[essayReg].length,j=s.i;
+    if(n>1){do{j=Math.floor(Math.random()*n)}while(j===s.i&&!s.ai)}
+    lp[essayReg]={i:j};save('lp',lp);
+  }
+  function parseObj(t){t=String(t||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();try{return JSON.parse(t)}catch(e){var m=t.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e2){}}}return null}
+  async function genPrompt(kind){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');if(!sample)throw {code:'unavailable'};
+    var ctx=kind==='daily'?'a short everyday writing task of 80-120 words (a diary entry, a message, a short story or a short opinion)':
+      ({'口語':'a personal, spoken-style writing task of 150-200 words, like an IELTS Speaking Part 2 cue card','商務':'a realistic workplace email or message task of 150-200 words','學術':'an IELTS Writing Task 2 style essay question, or an academic writing task, of 150-200 words'})[essayReg];
+    var avoid=kind==='daily'?SITU.map(function(x){return x[1]}):PROMPTS[essayReg].map(function(x){return x[0]});
+    var prompt='Create ONE new English writing prompt for a Traditional Chinese speaker preparing for IELTS: '+ctx+'. Pick a fresh, specific topic, different from all of these: '+JSON.stringify(avoid)+'. Random seed: '+Date.now()+'. Return ONLY JSON, no markdown: {"q":"the prompt in English","r":"繁體中文，一句話說明要寫哪些重點","tag":"日記|書信|敘事|論述|商務"}';
+    var res=await sample(prompt,{modelTier:'default'});
+    var d=parseObj(res&&res.text);
+    if(!d||!d.q)throw {code:'parse'};
+    return d;
+  }
+  function essayPool(){return all().filter(function(c){return c.r===essayReg||c.r==='通用'})}
+  function renderEssay(){
+    var el=$('#p-essay');
+    var segM='<div class="seg" role="group" aria-label="作文模式"><button data-emode="daily" aria-pressed="'+(essayMode==='daily')+'">今日小作文</button><button data-emode="long" aria-pressed="'+(essayMode==='long')+'">場合長文</button></div>';
+    if(essayMode==='daily'){el.innerHTML=segM+'<div id="essayBody"></div>';renderDailyEssay();return}
+    var segE='<div class="seg" role="group" aria-label="作文場合">'+['口語','商務','學術'].map(function(v){return '<button data-ereg="'+v+'" aria-pressed="'+(essayReg===v)+'">'+v+'</button>'}).join('')+'</div>';
+    var cp=curPrompt();
+    el.innerHTML=segM+segE+
+      '<div class="prompt"><div class="tag red">作文題 · '+essayReg+(cp.ai?' · Claude 出題':'')+'</div><p class="q" style="font-size:24px;margin:4px 0 8px">'+esc(cp.q)+'</p>'+
+      '<p class="req">150–200 字。'+esc(cp.r||'')+'至少用上 '+Math.min(8,essayPool().length)+' 個下方標籤裡的說法。</p></div>'+
+      '<textarea id="essay" placeholder="在這裡寫作文…" aria-label="作文內容"></textarea>'+
+      '<div class="meta"><span id="wc">0 字</span><span id="used">用到 0 / '+essayPool().length+'</span></div>'+
+      '<div class="chips" id="chips"></div>'+
+      '<div class="row"><button class="btn" data-e="lnext">換一題</button><button class="btn" data-e="lai"'+(genBusy?' disabled':'')+'>'+(genBusy?'Claude 出題中…':'請 Claude 出新題')+'</button></div>'+
+      (genMsg?'<div class="fb">'+esc(genMsg)+'</div>':'')+
+      '<div class="row"><button class="btn" data-e="copy">複製全文，貼給 Claude 批改</button></div>';
+    var ta=$('#essay');ta.value=draft;updateEssay();
+  }
+  function updateEssay(){
+    var ta=$('#essay');if(!ta)return;
+    var txt=ta.value,a=essayPool(),used=0,html='';
+    var wds=(txt.match(/[A-Za-z0-9'’-]+/g)||[]).length;
+    a.forEach(function(c){
+      var on=rxOf(c).test(txt);if(on)used++;
+      html+='<span class="chip'+(on?' on':'')+'">'+esc(c.t)+'</span>';
+    });
+    $('#wc').textContent=wds+' 字';
+    $('#used').textContent='用到 '+used+' / '+a.length;
+    $('#chips').innerHTML=html;
+    draft=txt;save('draft',draft);
+  }
+  $('#p-essay').addEventListener('input',function(e){if(e.target.id==='essay')updateEssay();if(e.target.id==='dessay')updateDaily()});
+  $('#p-essay').addEventListener('click',function(e){
+    var em=e.target.closest('[data-emode]');
+    if(em){essayMode=em.getAttribute('data-emode');genMsg='';renderEssay();return}
+    if(e.target.closest('button[data-e="lnext"]')){nextPrompt();genMsg='';renderEssay();return}
+    var ga=e.target.closest('button[data-e="lai"],button[data-e="dai"]');
+    if(ga){
+      if(genBusy)return;
+      var kind=ga.getAttribute('data-e')==='dai'?'daily':'long';
+      genBusy=true;genMsg='';renderEssay();
+      genPrompt(kind).then(function(d){
+        if(kind==='daily'){dq.n++;save('dq',dq);save('dai',{k:today()+'#'+dq.n,s:[d.tag||'敘事',d.q]})}
+        else{var s0=lpS()[essayReg]||{i:0};lp[essayReg]={i:s0.i,ai:{q:d.q,r:d.r||''}};save('lp',lp)}
+      }).catch(function(err){genMsg=(err&&(err.code==='unavailable'||err.code==='not_granted'))?'這裡目前不能直接請 Claude 出題，先用「換一題／再抽一題」從題庫換。':(err&&err.code==='rate_limited'?'請求太頻繁了，稍等一下再試。':'這次沒拿到題目，再按一次試試。')})
+        .then(function(){genBusy=false;renderEssay()});
+      return;
+    }
+    var rd=e.target.closest('button[data-e="redraw"]');
+    if(rd){dq.n++;save('dq',dq);renderEssay();return}
+    var dc=e.target.closest('button[data-e="dcopy"]');
+    if(dc){var pk=window.__dpk,ta2=$('#dessay'),msg=pk.sit[1]+(pk.w?'\nUse the word: '+pk.w.w:'')+(pk.c?'\nUse the phrase: '+pk.c.t:'')+'\n\n'+ta2.value,dn=function(m){dc.textContent=m;setTimeout(function(){dc.textContent='複製，貼給 Claude 批改'},1800)};
+      try{navigator.clipboard.writeText(msg).then(function(){dn('已複製')},function(){ta2.select();dn('請手動複製')})}catch(err){ta2.select();dn('請手動複製')}
+      return}
+    var s=e.target.closest('[data-ereg]');
+    if(s){essayReg=s.getAttribute('data-ereg');renderEssay();return}
+    var b=e.target.closest('button[data-e="copy"]');if(!b)return;
+    var ta=$('#essay'),done=function(m){b.textContent=m;setTimeout(function(){b.textContent='複製全文，貼給 Claude 批改'},1800)};
+    try{navigator.clipboard.writeText(curPrompt().q+'\n\n'+ta.value).then(function(){done('已複製')},function(){ta.select();done('請手動複製')})}
+    catch(err){ta.select();done('請手動複製')}
+  });
+
+  /* ---------- before / after comparison ---------- */
+  var COMP_BASE=[{
+    id:'s1',title:'碩士研究的挑戰',date:'2026-11-16',
+    orig:`The most challenging work will absolutely be complete my master degree. Since my professor/supervisor and I has totally different mindset on research. We have discussed to expand a brand new topic that her lab never done before. I was intrigued by "Multi-Objective optimization" at that time. Nevertheless, it required enormous math acknowledge and coding skill, which is not trivial for me honestly. I study many papers for optimization, and code for like around the clock. Occasionally, I'll have a rest to reset my brain. I often vibe out with my girlfriend or attending volleyball, baseball, hiking, you name it. Sometimes I'm fascinated to video games and like throwing pity party to myself in sudden. Cuz like though my parents are beating up on me, really tough and frustrated. Doing all this kind of research, tapping into Python and abundants of cool mathematics, eventually manifested a great model really brings me to pleasure. And my abstract thing took off during these hard time, I feel so glad for me I had learned several models to dive into all types of problems, and also planning your daily routine, pressure management.`,
+    rev:`The most challenging thing I've done is completing my master's degree. My supervisor and I have totally different mindsets about research, so we decided to expand into a brand-new topic her lab had never worked on. I was intrigued by multi-objective optimization at the time. Nevertheless, it required enormous mathematical knowledge and coding skills, which was not trivial for me, honestly. I read many papers on optimization and coded around the clock. Occasionally, I took a break to reset my brain. I often vibed out with my girlfriend, went to volleyball and baseball games, or went hiking, you name it. Sometimes I got absorbed in video games, or suddenly threw myself a pity party, because it felt as though my parents were beating up on me. It was tough and frustrating. But by tapping into Python and plenty of cool mathematics, I eventually built a great model, which brought me real joy. My research took off during those hard times, and I'm so glad I had learned several models to dive into all kinds of problems. I also learned to plan my daily routine and manage pressure.`,
+    notes:['題目問過去的經驗，全文統一用過去式。','I and my supervisor has → have；math acknowledge → mathematical knowledge。','fascinated to → fascinated by；in sudden → suddenly；throwing pity party to myself → threw myself a pity party。','「tapping into…, eventually manifested…」缺主詞，補上 I，避免懸垂修飾。','manifest 偏向意念成真；做出模型用 built 更自然。','人稱前後一致：your daily routine → my daily routine。']
+  }];
+  var compSel='s1',compView='diff';
+  function allComps(){return COMP_BASE.concat(comps)}
+  function toks(s){return String(s||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean)}
+  function diffOps(a,b){
+    var n=a.length,m=b.length,dp=[],i,j;
+    for(i=0;i<=n;i++)dp.push(new Uint16Array(m+1));
+    for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+    var ops=[];i=0;j=0;
+    while(i<n&&j<m){
+      if(a[i]===b[j]){ops.push(['eq',a[i]]);i++;j++}
+      else if(dp[i+1][j]>=dp[i][j+1]){ops.push(['del',a[i]]);i++}
+      else{ops.push(['ins',b[j]]);j++}
+    }
+    while(i<n){ops.push(['del',a[i++]])}
+    while(j<m){ops.push(['ins',b[j++]])}
+    return ops;
+  }
+  function docBlock(title,hint,html){return '<div class="doc"><div class="doc-h"><b>'+title+'</b><span>'+hint+'</span></div><p>'+html+'</p></div>'}
+  function renderComp(){
+    var el=$('#p-comp'),list=allComps();
+    if(!list.some(function(c){return c.id===compSel}))compSel=list[0].id;
+    var c=list.filter(function(x){return x.id===compSel})[0];
+    var a=toks(c.orig),b=toks(c.rev),ops=diffOps(a,b),oh=[],rh=[],groups=0,prev='eq';
+    ops.forEach(function(o){
+      if(o[0]==='eq'){oh.push(esc(o[1]));rh.push(esc(o[1]))}
+      else if(o[0]==='del'){oh.push('<del>'+esc(o[1])+'</del>')}
+      else{rh.push('<ins>'+esc(o[1])+'</ins>')}
+      if(o[0]!=='eq'&&prev==='eq')groups++;
+      prev=o[0]==='eq'?'eq':'x';
+    });
+    var vs=all(),uo=vs.filter(function(v){return rxOf(v).test(c.orig)}).length,ur=vs.filter(function(v){return rxOf(v).test(c.rev)}).length;
+    var html='<div class="chips" style="margin-top:0">';
+    list.forEach(function(x){html+='<button class="chip pk'+(x.id===compSel?' on':'')+'" data-pick="'+esc(x.id)+'">'+esc(x.title)+' · '+esc(x.date)+'</button>'});
+    html+='</div>'+
+      '<div class="stats"><div class="stat"><b>'+groups+'</b><span>修改處</span></div>'+
+      '<div class="stat"><b>'+uo+' → '+ur+'</b><span>片語庫說法</span></div>'+
+      '<div class="stat"><b>'+a.length+' → '+b.length+'</b><span>字數</span></div></div>'+
+      '<div class="seg" role="group" aria-label="檢視方式" style="margin-top:14px">'+
+      [['diff','標記對照'],['orig','只看原稿'],['rev','只看修改版']].map(function(v){return '<button data-view="'+v[0]+'" aria-pressed="'+(compView===v[0])+'">'+v[1]+'</button>'}).join('')+'</div>';
+    if(compView==='diff')html+=docBlock('原稿','刪除標紅',oh.join(' '))+docBlock('修改版','新增標綠',rh.join(' '));
+    else if(compView==='orig')html+=docBlock('原稿','',esc(c.orig));
+    else html+=docBlock('修改版','',esc(c.rev));
+    if(c.notes&&c.notes.length)html+='<div class="fb"><b>這次學到的</b><ul>'+c.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul></div>';
+    if(c.id!=='s1')html+='<div class="row"><button class="btn" data-cdel="'+esc(c.id)+'">刪除這組對比</button></div>';
+    html+='<details class="add"><summary>新增一組對比</summary><form id="compForm" autocomplete="off">'+
+      '<label for="c-t">標題<input type="text" id="c-t" placeholder="e.g. 週間作文"></label>'+
+      '<label for="c-o">原稿<textarea id="c-o" required></textarea></label>'+
+      '<button class="btn" type="button" data-fill="1">帶入作文區的草稿</button>'+
+      '<label for="c-r">修改版<textarea id="c-r" required></textarea></label>'+
+      '<label for="c-n">學到的重點（一行一點，可不填）<textarea id="c-n" style="min-height:80px"></textarea></label>'+
+      '<button class="btn primary" type="submit">儲存對比</button></form></details>';
+    el.innerHTML=html;
+  }
+  $('#p-comp').addEventListener('click',function(e){
+    var p=e.target.closest('[data-pick]');
+    if(p){compSel=p.getAttribute('data-pick');renderComp();return}
+    var v=e.target.closest('[data-view]');
+    if(v){compView=v.getAttribute('data-view');renderComp();return}
+    var d=e.target.closest('[data-cdel]');
+    if(d){var id=d.getAttribute('data-cdel');comps=comps.filter(function(x){return x.id!==id});save('comps',comps);compSel='s1';renderComp();return}
+    if(e.target.closest('[data-fill]')){$('#c-o').value=draft||''}
+  });
+  $('#p-comp').addEventListener('submit',function(e){
+    e.preventDefault();
+    var o=$('#c-o').value.trim(),r=$('#c-r').value.trim();if(!o||!r)return;
+    var id='c'+Date.now();
+    comps.push({id:id,title:$('#c-t').value.trim()||('作文 '+today()),date:today(),orig:o,rev:r,
+      notes:$('#c-n').value.split('\n').map(function(s){return s.trim()}).filter(Boolean)});
+    save('comps',comps);compSel=id;compView='diff';renderComp();
+  });
+
+  /* ---------- inbox: plain (black-pen) phrases waiting for an upgrade ---------- */
+  var busy={},ibMsg='';
+  function saveInbox(){save('inbox',inbox)}
+  function parseJson(t){
+    t=String(t||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+    try{return JSON.parse(t)}catch(e){var m=t.match(/\[[\s\S]*\]/);if(m){try{return JSON.parse(m[0])}catch(e2){}}}
+    return null;
+  }
+  function cleanOpt(o){
+    var r=REGS.indexOf(o&&o.r)>=0?o.r:'通用';
+    return {t:String((o&&o.t)||'').trim(),z:String((o&&o.z)||'').trim(),r:r,e:String((o&&o.e)||'').trim(),note:String((o&&o.note)||'').trim()};
+  }
+  function addSugItem(it,o){
+    if(isOneWord(o.t)){
+      if(!hasWord(o.t)){var wo=toWord({t:o.t,z:o.z,e:o.e,p:it.p,r:o.r,n:o.note});words.unshift(wo);save('words',words);colAdd(wo);syncPending(wo)}
+    }else{
+      custom.push({t:o.t,z:o.z,p:it.p,e:o.e,r:o.r});save('custom',custom);syncPhr(custom[custom.length-1]);qz=null;
+    }
+  }
+  function adoptItem(it){
+    var n=0;
+    (it.sug||[]).forEach(function(o){
+      if(o.added)return;
+      if(isOneWord(o.t)||!all().some(function(c){return c.t.toLowerCase()===o.t.toLowerCase()}))addSugItem(it,o);
+      o.added=true;n++;
+    });
+    if((it.sug||[]).length)it.done=true;
+    return n;
+  }
+  function errText(err){
+    var c=err&&err.code;
+    if(c==='unavailable'||c==='not_granted')return '這個環境目前不能直接問 Claude。請改按「複製清單」，貼到對話裡。';
+    if(c==='rate_limited')return '請求太頻繁了，稍等一下再試。';
+    return '沒有取得可用的回覆。可以再按一次，或改用「複製清單」貼到對話裡。';
+  }
+  async function askClaude(items){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var prompt='You are an English coach for a Traditional Chinese speaker who wants natural spoken, business and academic English. '+
+      'For each plain phrase below, give 2 to 4 more natural or more advanced alternatives. '+
+      'Return ONLY a JSON array with no markdown. Format: '+
+      '[{"id":"<id>","options":[{"t":"the expression","z":"繁體中文意思","r":"口語|商務|學術|通用","e":"one short example sentence that contains the expression","note":"繁體中文，一句話說明語氣或用法差異"}]}]. '+
+      'Phrases: '+JSON.stringify(items.map(function(i){return {id:i.id,phrase:i.p}}));
+    var res=await sample(prompt,{modelTier:'default'});
+    var data=parseJson(res&&res.text);
+    if(!Array.isArray(data))throw {code:'parse'};
+    return data;
+  }
+  async function runAsk(ids){
+    var items=inbox.filter(function(i){return ids.indexOf(i.id)>=0});
+    if(!items.length)return;
+    ids.forEach(function(id){busy[id]=true});ibMsg='';renderInbox();
+    try{
+      var data=await askClaude(items);
+      data.forEach(function(d){
+        var it=inbox.filter(function(i){return i.id===d.id})[0];
+        if(it&&Array.isArray(d.options)){it.sug=d.options.slice(0,4).map(cleanOpt).filter(function(o){return o.t})}
+      });
+      saveInbox();
+    }catch(err){ibMsg=errText(err)}
+    ids.forEach(function(id){delete busy[id]});renderInbox();
+  }
+  function renderInbox(){
+    var el=$('#p-inbox'),pend=inbox.filter(function(i){return !i.done}),done=inbox.filter(function(i){return i.done});
+    var html='<form id="ibForm" class="ibform" autocomplete="off"><input type="text" id="i-p" placeholder="寫下黑筆說法，例如 very strong" aria-label="黑筆說法">'+
+      '<button class="btn primary" type="submit" style="flex:0 0 auto">加入</button></form>';
+    if(ibMsg)html+='<div class="fb" style="margin-top:0;margin-bottom:10px">'+esc(ibMsg)+'</div>';
+    if(!pend.length){
+      html+='<p class="empty">想到黑筆說法就先記在這裡，不用急著找紅筆。累積幾個之後，一次問 Claude 要升級說法。</p>';
+    }else{
+      var anyBusy=Object.keys(busy).length>0;var nSug=0;pend.forEach(function(i){(i.sug||[]).forEach(function(o){if(!o.added)nSug++})});
+      html+='<div class="row" style="margin-top:0"><button class="btn primary" data-ib="askall"'+(anyBusy?' disabled':'')+'>全部問 Claude（'+pend.length+'）</button>'+
+        (nSug?'<button class="btn primary" data-ib="adoptall">全部採納（'+nSug+' 個建議）</button>':'')+'<button class="btn" data-ib="copy">複製清單</button></div>';
+      pend.forEach(function(i){
+        var anyAdded=(i.sug||[]).some(function(o){return o.added});
+        html+='<div class="ib"><div class="ib-h"><span class="ib-p">'+esc(i.p)+'</span>'+
+          '<button class="btn sm" data-ib="del" data-id="'+esc(i.id)+'" aria-label="刪除 '+esc(i.p)+'">刪除</button></div>';
+        (i.sug||[]).forEach(function(o,k){
+          html+='<div class="sug"><span class="st">'+esc(o.t)+'</span><span>'+esc(o.z)+' <span class="sm2">· '+esc(o.r)+'</span></span>'+
+            (o.e?'<span class="sm2">'+esc(o.e)+'</span>':'')+(o.note?'<span class="sm2">'+esc(o.note)+'</span>':'')+
+            '<button class="btn sm" data-ib="add" data-id="'+esc(i.id)+'" data-k="'+k+'"'+(o.added?' disabled':'')+'>'+(o.added?'已加入片語庫':'加入片語庫')+'</button></div>';
+        });
+        html+='<div class="ib-acts">'+(busy[i.id]?'<span class="sm2">Claude 思考中…</span>':'<button class="btn sm" data-ib="ask" data-id="'+esc(i.id)+'">'+(i.sug?'重新問':'問 Claude')+'</button>')+
+          ((i.sug||[]).some(function(o){return !o.added})?'<button class="btn sm" data-ib="addall" data-id="'+esc(i.id)+'">全部加入</button>':'')+(anyAdded?'<button class="btn sm" data-ib="finish" data-id="'+esc(i.id)+'">完成</button>':'')+'</div></div>';
+      });
+    }
+    if(done.length){
+      html+='<div class="list-h" style="margin-top:22px">已升級 · '+done.length+'</div><div class="list">';
+      done.forEach(function(i){
+        var added=(i.sug||[]).filter(function(o){return o.added}).map(function(o){return o.t}).join('、');
+        html+='<div class="item"><span class="t">'+esc(added||'（未加入）')+'</span><span class="p">原本：'+esc(i.p)+'</span>'+
+          '<button data-ib="del" data-id="'+esc(i.id)+'" aria-label="刪除 '+esc(i.p)+'">刪除</button></div>';
+      });
+      html+='</div>';
+    }
+    el.innerHTML=html;
+  }
+  $('#p-inbox').addEventListener('submit',function(e){
+    e.preventDefault();
+    var inp=$('#i-p'),v=inp.value.trim();if(!v)return;
+    if(!inbox.some(function(i){return !i.done&&i.p.toLowerCase()===v.toLowerCase()})){
+      inbox.unshift({id:'i'+Date.now()+Math.floor(Math.random()*100),p:v,done:false});saveInbox();
+    }
+    renderInbox();var n=$('#i-p');if(n)n.focus();
+  });
+  $('#p-inbox').addEventListener('click',function(e){
+    var b=e.target.closest('[data-ib]');if(!b)return;
+    var a=b.getAttribute('data-ib'),id=b.getAttribute('data-id');
+    var it=inbox.filter(function(i){return i.id===id})[0];
+    if(a==='askall'){runAsk(inbox.filter(function(i){return !i.done}).map(function(i){return i.id}))}
+    else if(a==='ask'){runAsk([id])}
+    else if(a==='del'){inbox=inbox.filter(function(i){return i.id!==id});saveInbox();renderInbox()}
+    else if(a==='finish'&&it){it.done=true;saveInbox();renderInbox()}
+    else if(a==='addall'&&it){var n1=adoptItem(it);saveInbox();renderProg();ibMsg='已加入 '+n1+' 個升級說法（單字會放進單字庫）。';renderInbox()}
+    else if(a==='adoptall'){var n2=0;inbox.filter(function(x){return !x.done}).forEach(function(x){n2+=adoptItem(x)});saveInbox();renderProg();ibMsg='已一次採納 '+n2+' 個升級說法（單字會放進單字庫）。';renderInbox()}
+    else if(a==='add'&&it){
+      var o=(it.sug||[])[+b.getAttribute('data-k')];if(!o)return;
+      
+      if(!all().some(function(c){return c.t.toLowerCase()===o.t.toLowerCase()})){
+        addSugItem(it,o);
+      }
+      o.added=true;saveInbox();renderProg();renderInbox();
+    }
+    else if(a==='copy'){
+      var pend=inbox.filter(function(i){return !i.done});
+      var txt='請幫我把這些黑筆說法升級，每個給 2–4 個更道地的說法，標明場合（口語/商務/學術/通用）和語氣差異，並附一句例句：\n'+
+        pend.map(function(i,k){return (k+1)+'. '+i.p}).join('\n');
+      var ok=function(m){ibMsg=m;renderInbox()};
+      try{navigator.clipboard.writeText(txt).then(function(){ok('已複製清單，貼到對話裡就可以了。')},function(){ok('無法自動複製，請手動抄下清單。')})}
+      catch(err){ok('無法自動複製，請手動抄下清單。')}
+    }
+  });
+
+  /* ---------- word library ---------- */
+  var ORIGINS=['Old English','Ancient Greek','Latin','French','German','Japanese','Welsh','Portuguese','Italian','Scandinavian','a poetic neologism','an obscure archaic English word'];
+  var wMsg='',wBusy=false,wGapOnly=false;
+  function parseObj(t){
+    t=String(t||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+    try{return JSON.parse(t)}catch(e){var m=t.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e2){}}}
+    return null;
+  }
+  function wErr(err){
+    var c=err&&err.code;
+    if(c==='unavailable'||c==='not_granted')return '這個環境目前不能直接問 Claude。';
+    if(c==='rate_limited')return '請求太頻繁了，稍等一下再試。';
+    return '沒有取得可用的詞。再按一次試試。';
+  }
+  async function askWord(){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var origin=ORIGINS[Math.floor(Math.random()*ORIGINS.length)];
+    var have=words.map(function(x){return x.w}).concat(Object.keys(xpool||{})).slice(0,150).join(', ');
+    var prompt='Suggest ONE rare, evocative word for a vocabulary collector. Origin or category for this pick: '+origin+'. '+
+      'The collector likes words in the spirit of: facade, saudade, eleutheria, ailleurs, forelsket, eudaimonia, plaintive, creusa. '+
+      'Do not choose any word already collected: '+have+'. '+
+      'The word must be a real headword or well-attested loanword that can be found in Merriam-Webster, Wiktionary or Etymonline. Never invent a word. '+
+      'Be accurate; if you are unsure of an etymology, say less rather than guess. '+
+      'Return ONLY one JSON object with no markdown: '+
+      '{"w":"the word","l":"來源語言或年代，繁體中文","pr":"easy English respelling like sah-DAH-dee","z":"繁體中文意思","g":"short English definition","e":"one example sentence in English","n":"繁體中文，一到兩句詞源或趣味"}';
+    var res=await sample(prompt,{cache:false,modelTier:'default'});
+    var o=parseObj(res&&res.text);
+    if(!o||!o.w||!o.z)throw {code:'parse'};
+    var out={};['w','l','pr','z','g','e','n'].forEach(function(k){out[k]=String(o[k]||'').trim()});
+    out.src='Claude';
+    return out;
+  }
+  async function fillWord(word,zh,note){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var prompt='A vocabulary collector typed this word: "'+word+'"'+(zh?' (their note on meaning: '+zh+')':'')+'. '+
+      'If it looks like a misspelling of a real word, use the correct spelling and mention the correction in n. '+
+      'Be accurate; if unsure of the etymology, say less rather than guess. '+
+      'Return ONLY one JSON object with no markdown: '+
+      '{"w":"correct spelling","l":"來源語言或年代，繁體中文","pr":"easy English respelling","z":"繁體中文意思","g":"short English definition","e":"one example sentence in English","n":"繁體中文，一到兩句詞源或趣味"}';
+    var res=await sample(prompt,{cache:false,modelTier:'default'});
+    var o=parseObj(res&&res.text);
+    if(!o||!o.w||!o.z)throw {code:'parse'};
+    var out={};['w','l','pr','z','g','e','n'].forEach(function(k){out[k]=String(o[k]||'').trim()});
+    if(note)out.n=(out.n?out.n+' ':'')+'你的備註：'+note;
+    out.src='Claude 補全（未對照辭典）';
+    return out;
+  }
+
+  /* ---------- Claude fill / batch / regenerate for the word library ---------- */
+  var AIK=[['z','中文意思'],['e','例句'],['g','英文釋義'],['pr','發音'],['l','來源語言'],['n','詞源'],['pos','詞性'],['syn','同義詞'],['col','常見搭配']];
+  function progBar(lb,tot,blanks,nm,ver){var bad=blanks.filter(function(b){return b.length}).length,ok=tot-bad,pct=tot?Math.round(ok*100/tot):100,n=Math.round(pct/10),bar='',cnt={},i;for(i=0;i<10;i++)bar+=i<n?'█':'░';blanks.forEach(function(b){b.forEach(function(k){cnt[k]=(cnt[k]||0)+1})});var rows=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a]}).map(function(k){return nm(k)+' 缺 '+cnt[k]}).join('・');return '<details style="margin:4px 0 8px"><summary style="cursor:pointer;font-variant-numeric:tabular-nums"><b>'+lb+'</b> '+bar+' '+pct+'%'+(ver!=null?'　辭典 '+ver+'/'+tot:'')+'</summary><p class="sm2" style="margin:6px 0 0">'+(rows||'全部補齊')+'</p></details>'}
+  var AIBASIC=['z','e','g','pr','l','n'],AIADV=['pos','syn','col'],wStop=false;
+  function aiName(k){for(var i=0;i<AIK.length;i++)if(AIK[i][0]===k)return AIK[i][1];return k}
+  function wLocked(x,k){if(k==='z'||k==='e')return false;var o=ETYM[String(x.w).toLowerCase()];return !!(o&&o[k]!==''&&o[k]!=null)}
+  function minorMiss(x){return wBlank(x,AIADV).map(aiName)}
+  function wBlank(x,ks){
+    var e=E(x),out=[];
+    ks.forEach(function(k){
+      var v=e[k];
+      if(k==='pr'&&e.ipa)v=e.ipa;
+      if(k==='l'&&v==='自行輸入')v='';
+      if((!v||!String(v).trim())&&!wLocked(x,k))out.push(k);
+    });
+    return out;
+  }
+  async function aiFillBatch(items){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var spec={z:'繁體中文意思',e:'one natural English example sentence containing the word',g:'short English definition',pr:'easy English respelling like sah-DAH-dee',l:'來源語言或年代，繁體中文',n:'繁體中文，一到兩句詞源或趣味',pos:'詞性，例如 n. / v. / adj.',syn:'2 to 4 English synonyms, comma separated',col:'2 to 3 common English collocations, comma separated'};
+    var prompt='You help a Traditional Chinese speaker build a vocabulary notebook. For each word, fill ONLY the fields listed in its "need". Field formats: '+JSON.stringify(spec)+'. '+
+      'Be accurate; if you are not sure of a field (especially etymology), return an empty string for it rather than guess. '+
+      'If "avoid" gives a current value for a field, write something clearly different from it. '+
+      'If a word looks misspelled, keep it under the same "w" and mention the correct spelling in n. '+
+      'Return ONLY a JSON array with no markdown: [{"w":"<word exactly as given>","z":"..."}] including only the needed fields. Words: '+
+      JSON.stringify(items.map(function(i){return {w:i.w,need:i.need,known:i.cur,avoid:i.avoid}}));
+    var res=await sample(prompt,{cache:false,modelTier:'default'});
+    var data=parseJson(res&&res.text);
+    if(!Array.isArray(data))throw {code:'parse'};
+    return data;
+  }
+  function aiApply(x,o,ks,over){
+    var n=[];
+    x.ai=x.ai||{};
+    ks.forEach(function(k){
+      if(wLocked(x,k))return;
+      var v=String(o&&o[k]!=null?o[k]:'').trim();if(!v)return;
+      if(over){x.prev=x.prev||{};var old=(k==='z'?x.uz:k==='e'?x.ue:x[k]);x.prev[k]=old==null?'':old}
+      if(k==='z')x.uz=v;else if(k==='e')x.ue=v;else x[k]=v;
+      x.ai[k]=today();n.push(k);
+    });
+    return n;
+  }
+  function aiNames(ks){return ks.map(aiName).join('、')}
+  async function wFillOne(ix){
+    var x=words[ix];if(!x)return;
+    var need=wBlank(x,AIBASIC.concat(AIADV));
+    if(!need.length){wMsg='「'+x.w+'」的欄位都有內容了。想換掉某個欄位，可用下方「重寫」。';renderDaily();return}
+    wBusy=true;wMsg='';renderDaily();
+    try{
+      var e=E(x),data=await aiFillBatch([{w:x.w,need:need,cur:{z:e.z||'',g:e.g||'',note:x.my||''}}]);
+      var o=data.filter(function(d){return d&&String(d.w).toLowerCase()===String(x.w).toLowerCase()})[0]||data[0],r=aiApply(x,o,need,false);
+      if(r.length){save('words',words);wMsg='Claude 已補上「'+x.w+'」的 '+aiNames(r)+'（未對照辭典）。'}
+      else wMsg='Claude 沒有回傳可用的內容，可以再按一次。';
+    }catch(err){wMsg=wErr(err)}
+    wBusy=false;renderDaily();
+  }
+  async function wBatch(scope){
+    var ks=scope==='basic'?AIBASIC:scope==='adv'?AIADV:AIBASIC.concat(AIADV),todo=[];
+    words.forEach(function(x){var need=wBlank(x,ks);if(need.length)todo.push({x:x,need:need})});
+    if(!todo.length){wMsg='所選欄位都有內容了，沒有需要補的。';renderDaily();return}
+    wBusy=true;wStop=false;wMsg='批次補全中… 0 / '+todo.length;renderDaily();
+    var done=0,filled=0,failed=0;
+    try{
+      for(var i=0;i<todo.length&&!wStop;i+=6){
+        var batch=todo.slice(i,i+6);
+        try{
+          var data=await aiFillBatch(batch.map(function(t){var e=E(t.x);return {w:t.x.w,need:t.need,cur:{z:e.z||'',g:e.g||''}}}));
+          data.forEach(function(o){
+            var t=batch.filter(function(b){return o&&String(b.x.w).toLowerCase()===String(o.w).toLowerCase()})[0];
+            if(t&&aiApply(t.x,o,t.need,false).length)filled++;
+          });
+          save('words',words);
+        }catch(err){
+          if(err&&(err.code==='unavailable'||err.code==='not_granted'||err.code==='rate_limited'))throw err;
+          failed+=batch.length;
+        }
+        done+=batch.length;
+        var m=$('#wmsg');if(m)m.textContent='批次補全中… '+Math.min(done,todo.length)+' / '+todo.length;
+      }
+      wMsg=(wStop?'已停止。':'完成。')+'補了 '+filled+' 個單字'+(failed?'，另有 '+failed+' 個這次沒補成（可再按一次）':'')+'。內容未對照辭典。';
+    }catch(err){wMsg=(done?'已處理 '+done+' / '+todo.length+'，中途停下：':'')+wErr(err)}
+    wBusy=false;renderDaily();
+  }
+  async function wRegen(ix,which){
+    var x=words[ix];if(!x)return;
+    var ks=(which==='all'?['z','e','g','n','pos','syn','col']:[which]).filter(function(k){return !wLocked(x,k)});
+    if(!ks.length){wMsg='「'+x.w+'」這個欄位已由辭典核對過，不能重寫。';renderDaily();return}
+    wBusy=true;wMsg='';renderDaily();
+    try{
+      var e=E(x),avoid={};ks.forEach(function(k){if(e[k])avoid[k]=e[k]});
+      var data=await aiFillBatch([{w:x.w,need:ks,cur:{z:e.z||'',g:e.g||'',note:x.my||''},avoid:avoid}]);
+      var o=data.filter(function(d){return d&&String(d.w).toLowerCase()===String(x.w).toLowerCase()})[0]||data[0];
+      x.prev={};var r=aiApply(x,o,ks,true);
+      if(r.length){save('words',words);wMsg='已重寫「'+x.w+'」的 '+aiNames(r)+'。不滿意可按「復原」換回舊的。'}
+      else{x.prev=null;wMsg='Claude 沒有回傳可用的內容，舊內容沒有動。'}
+    }catch(err){wMsg=wErr(err)}
+    wBusy=false;renderDaily();
+  }
+  function wUndo(ix){
+    var x=words[ix];if(!x||!x.prev)return;
+    var ks=Object.keys(x.prev);
+    ks.forEach(function(k){var v=x.prev[k];if(k==='z')x.uz=v;else if(k==='e')x.ue=v;else x[k]=v;if(x.ai)delete x.ai[k]});
+    x.prev=null;save('words',words);wMsg='已復原「'+x.w+'」的 '+aiNames(ks)+'。';renderDaily();
+  }
+  function addWord(o){
+    if(hasWord(o.w)){wMsg='「'+o.w+'」已經在收藏裡了。';return false}
+    o.d=today();words.unshift(o);save('words',words);syncPending(o);colAdd(o);renderProg();wMsg='已加入「'+o.w+'」。';return true;
+  }
+  var bkOp={};
+  function bkL(s){var c=String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/^[^A-Za-z0-9]+/,'').charAt(0).toUpperCase();return /[A-Z]/.test(c)?c:'#'}
+  function bkHead(k,L,n){return '<details class="bk" data-bk="'+k+L+'"'+(bkOp[k+L]===false?'':' open')+'><summary><b>'+L+'</b><span class="sm2">'+n+'</span></summary>'}
+  ['#p-daily','#p-deck'].forEach(function(s){var el=$(s);if(el)el.addEventListener('toggle',function(e){var d=e.target;if(d.classList&&d.classList.contains('bk'))bkOp[d.getAttribute('data-bk')]=d.open},true)});
+  function wEdit(x,i){
+    var cur=E(x);
+    return '<details class="pd"><summary>編輯意思・例句・筆記</summary><div class="wedit" data-i="'+i+'" style="display:grid;gap:6px;padding:6px 0">'+
+      '<label>中文意思<input type="text" class="we-z" value="'+esc(cur.z||'')+'"></label>'+
+      '<label>例句<input type="text" class="we-e" value="'+esc(cur.e||'')+'"></label>'+
+      '<label>我的筆記<input type="text" class="we-my" value="'+esc(x.my||'')+'"></label>'+
+      '<div class="row"><button class="btn sm primary" type="button" data-w="save" data-i="'+i+'">儲存</button>'+
+      '<button class="btn sm" type="button" data-w="aifill" data-i="'+i+'"'+(wBusy?' disabled':'')+'>交給 Claude 補</button></div>'+
+      '<div class="row" style="align-items:center"><select class="we-rg" aria-label="要重寫的欄位" style="flex:1 1 auto;min-height:40px;width:auto"><option value="e">重寫例句</option><option value="z">重寫中文意思</option><option value="g">重寫英文釋義</option><option value="n">重寫詞源</option><option value="syn">重寫同義詞</option><option value="col">重寫搭配</option><option value="all">重寫以上全部</option></select>'+
+      '<button class="btn sm" type="button" data-w="regen" data-i="'+i+'"'+(wBusy?' disabled':'')+'>重寫</button>'+
+      (x.prev&&Object.keys(x.prev).length?'<button class="btn sm" type="button" data-w="undo" data-i="'+i+'">復原</button>':'')+'</div>'+
+      '<p class="sm2" style="margin:0">「補」只填空白；「重寫」會換掉所選欄位，換之前的內容可按「復原」找回。你的筆記不會被動。</p></div></details>';
+  }
+  function renderDaily(){
+    var el=$('#p-daily'),html='<div class="count"><span>已收藏 '+words.length+' 個</span><span>'+(tray.length?'待收藏 '+tray.length+'（在「今日」）':'')+'</span></div>';
+    if(dbState)html+='<p class="sm2" style="margin:0 0 8px">'+esc(dbState)+'</p>';
+    if(wMsg)html+='<div class="fb" id="wmsg" style="margin-top:0;margin-bottom:10px">'+esc(wMsg)+'</div>';
+    var blankN=0;words.forEach(function(x){if(wBlank(x,AIBASIC.concat(AIADV)).length)blankN++});
+    html+='<div class="prompt" style="margin-bottom:14px"><div class="tag red">批次補全</div>'+
+      progBar('單字',words.length,words.map(function(x){return wBlank(x,AIBASIC.concat(AIADV))}),aiName,words.filter(function(x){return E(x).v}).length)+
+      '<div class="row" style="margin-top:0;align-items:center"><select id="w-bscope" aria-label="補哪些欄位" style="flex:1 1 auto;min-height:44px;width:auto"><option value="all">全部空白欄位</option><option value="basic">意思・例句・釋義・發音・來源・詞源</option><option value="adv">詞性・同義詞・搭配</option></select>'+
+      (wBusy?'<button class="btn" type="button" data-w="stop">停止</button>':'<button class="btn primary" type="button" data-w="batch"'+(blankN?'':' disabled')+'>一鍵補全</button>')+'</div></div>';
+    html+='<div class="prompt" style="margin-bottom:14px;border-color:var(--red,#c0392b)"><div class="tag red">一鍵查核</div><p class="sm2" style="margin:4px 0 8px">批量對照 Wiktionary；查不到的交給 Claude 判斷。</p><button class="btn primary" type="button" style="width:100%;min-height:48px" data-w="'+(chkBusy?'chkstop':'check')+'">'+(chkBusy?'停止查核':'一鍵查核')+'</button></div>';
+    html+='<form id="wForm" autocomplete="off"><h2>新增單字（單字庫）</h2>'+
+      '<label for="w-w">單字<input type="text" id="w-w" placeholder="e.g. Eleutheria"></label>'+
+      '<label for="w-z">中文意思（可留白）<input type="text" id="w-z" placeholder="e.g. 自由"></label>'+
+      '<label for="w-n">備註（可留白）<input type="text" id="w-n" placeholder="出處、聯想、你的筆記"></label>'+
+      '<div class="row"><button class="btn primary" type="submit">自己輸入並加入</button>'+
+      '</div>'+
+      '<p class="sm2" style="margin:8px 0 0">新增的詞可按上方「一鍵查核」對照辭典。</p></form>';
+    var nGap=words.filter(function(x){return wBlank(x,AIBASIC).length}).length;
+    html+='<div class="list-h">單字庫 · '+words.length+'</div><label class="filter"><input type="checkbox" id="wGap"'+(wGapOnly?' checked':'')+'> 只看有空白（'+nGap+'）</label><div class="list">';
+    var curL='',wc={};words.forEach(function(w){var k=bkL(w.w);wc[k]=(wc[k]||0)+1});
+    words.map(function(_,i){return i}).sort(function(a,b){return String(words[a].w).toLowerCase().localeCompare(String(words[b].w).toLowerCase(),'en')}).forEach(function(i){
+      var x0=words[i],x=E(x0),L=bkL(x0.w),gaps=wBlank(x0,AIBASIC),minor=minorMiss(x0);if(wGapOnly&&!gaps.length)return;if(L!==curL){if(curL)html+='</details>';curL=L;html+=bkHead('w',L,wc[L])}
+      html+='<details class="wi"><summary><span class="wi-w">'+esc(x.w)+'</span><span class="sm2">'+esc(x.z)+'</span>'+(gaps.length?'<span class="gap-t">缺 '+esc(gaps.map(aiName).join('、'))+'</span>':'<span class="ok-t">✓ 完整'+(minor.length?'<span class="mk" title="尚缺：'+esc(minor.join('、'))+'">＊</span>':'')+'</span>')+'</summary><div class="wi-b">'+
+        '<span>'+esc(x.l||'')+' · '+pron(x)+'</span>'+tgHtml(x.tg)+'<span>'+esc(x.g||'')+'</span>'+(x.e?'<span style="font-style:italic">'+esc(x.e)+'</span>':'<span class="sm2">尚無例句（可在下方「編輯」填寫，或按「交給 Claude 補」）</span>')+(x.my?'<span>📝 '+esc(x.my)+'</span>':'')+wDetail(x)+wEdit(x0,i)+
+        '<span class="sm2">收藏於 '+esc(x.d||'')+' · '+esc(x.src||'內建')+'</span>'+
+        '<button class="btn sm" data-w="del" data-i="'+i+'" style="justify-self:start">刪除</button></div></details>';
+    });
+    el.innerHTML=html+(curL?'</details>':'')+'</div>';
+  }
+  $('#p-daily').addEventListener('change',function(e){if(e.target.id==='wGap'){wGapOnly=e.target.checked;renderDaily()}});
+  $('#p-daily').addEventListener('submit',function(e){
+    if(e.target.id!=='wForm')return;
+    e.preventDefault();
+    var w=$('#w-w').value.trim();if(!w)return;
+    addWord({w:w,l:'自行輸入',pr:'',z:$('#w-z').value.trim(),g:'',e:'',n:$('#w-n').value.trim(),src:'你輸入'});
+    renderDaily();
+  });
+  $('#p-daily').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-w]');if(!b)return;
+    var a=b.getAttribute('data-w');
+    if(a==='check'){chkRun('w')}else if(a==='chkstop'){chkStop=true}else if(a==='fill'&&!wBusy){
+      var fw=$('#w-w').value.trim(),fz=$('#w-z').value.trim(),fn=$('#w-n').value.trim();
+      wBusy=true;wMsg='';renderDaily();
+      (fw?fillWord(fw,fz,fn):askWord().then(function(x){x.src='Claude 想的新詞（未對照辭典）';return x})).then(function(x){addWord(x)}).catch(function(err){wMsg=wErr(err)}).then(function(){wBusy=false;renderDaily()});
+    }else if(a==='save'){
+      var ix=+b.getAttribute('data-i'),w0=words[ix],box=b.closest('.wedit');
+      if(w0&&box){
+        var nz=box.querySelector('.we-z').value.trim(),ne=box.querySelector('.we-e').value.trim(),nm=box.querySelector('.we-my').value.trim();
+        var cb=E(w0);if(w0.ai){if(nz!==(cb.z||''))delete w0.ai.z;if(ne!==(cb.e||''))delete w0.ai.e}w0.uz=nz;w0.ue=ne;w0.my=nm;if(!ETYM[w0.w.toLowerCase()]){w0.z=nz||w0.z;if(ne)w0.e=ne}
+        save('words',words);colAdd(w0);wMsg='已儲存「'+w0.w+'」。';
+      }
+      renderDaily();
+    }else if(a==='aifill'&&!wBusy){
+      wFillOne(+b.getAttribute('data-i'));
+    }else if(a==='regen'&&!wBusy){
+      var bx=b.closest('.wedit'),sel=bx&&bx.querySelector('.we-rg');
+      wRegen(+b.getAttribute('data-i'),sel?sel.value:'e');
+    }else if(a==='undo'){
+      wUndo(+b.getAttribute('data-i'));
+    }else if(a==='batch'&&!wBusy){
+      var bs=$('#w-bscope');wBatch(bs?bs.value:'all');
+    }else if(a==='stop'){
+      wStop=true;
+    }else if(a==='del'){
+      var w=words[+b.getAttribute('data-i')];
+      if(w){words.splice(+b.getAttribute('data-i'),1);delete srs['w:'+w.w.toLowerCase()];save('words',words);save('srs',srs);colDel(w);renderProg()}
+      renderDaily();
+    }
+  });
+
+  /* ---------- phrase library ---------- */
+  function pTag(c){
+    var h=wkMark('p:'+String(c.t).toLowerCase(),c.t)+tgHtml(c.tg)+(c.ipa?'<span class="ipa">/'+esc(c.ipa)+'/'+(c.ck&&c.ck.pr==='ok'?'':'')+'</span>':'');
+    var st=function(k){return {ok:'✓',fix:'已修正',unk:'查無來源'}[k]||k};
+    if(!c.ck)return h+((c.g||c.us)?'<details class="pd"><summary>釋義・用法</summary>'+(c.g?'<span><b>釋義</b>：'+esc(c.g)+'</span>':'')+(c.us?'<span><b>用法</b>：'+esc(c.us)+'</span>':'')+'</details>':'')+(pBlank(c).length?'<span class="e none">尚缺：'+esc(pBlank(c).map(function(k){return PFL[k]}).join('、'))+'（可按「一鍵補全」，未對照辭典）</span>':'');
+    var L={us:'用法',et:'由來',sh:'流變',ex:'例句',pr:'發音',tg:'標籤'},p=[];
+    ['us','et','sh','ex','pr','tg'].forEach(function(k){p.push(L[k]+' '+(c.ck[k]?st(c.ck[k]):'待核對'))});
+    var b=h+'<details class="pd"><summary>用法・由來・核對（'+esc(p.join(' · '))+'）'+(c.pt?'<span class="mk">＊</span>':'')+'</summary>';
+    if(c.g)b+='<span><b>釋義</b>：'+esc(c.g)+'</span>';
+    if(c.us)b+='<span><b>用法</b>：'+esc(c.us)+'</span>';
+    if(c.n)b+='<span><b>由來</b>：'+esc(c.n)+'</span>';
+    if(c.sh)b+='<span><b>流變</b>：'+esc(c.sh)+'</span>';
+    if(c.pt)b+='<span class="sm2">＊ 尚缺：'+esc((c.ptm&&c.ptm.length?c.ptm:['詞性','同義詞','常見搭配']).join('、'))+'（辭典頁面未提供）</span>';
+    b+='<span>核對'+(c.at?'（'+esc(c.at)+'）':'')+'：'+(c.u?'<a href="'+esc(c.u)+'" target="_blank" rel="noopener noreferrer">'+esc(c.s||'辭典')+'</a>':esc(c.s||'無來源'))+'</span></details>';
+    return b;
+  }
+  function itemHtml(c){
+    var ci=-1;custom.forEach(function(x,i){if(x.t===c.t)ci=i});
+    return '<div class="item"><span class="t">'+esc(c.t)+'</span><span class="z">'+esc(c.z)+'</span><span class="p">'+esc(c.r)+' · '+esc(c.p||'')+'</span>'+
+      (c.e?'<span class="e">'+esc(c.e)+'</span>':'<span class="e none">尚無例句</span>')+(c.aif?'<span class="sm2">'+esc(c.aif.map(function(k){return PFL[k]}).join('、'))+'由 Claude 補（未對照辭典）</span>':'')+pTag(c)+
+      (ci>=0?'<button data-del="'+ci+'" aria-label="刪除 '+esc(c.t)+'">刪除</button>':'')+'</div>';
+  }
+  var dMsg='',pBusy=false,pStop=false,pbMsg='';
+  var PFL={z:'中文意思',e:'例句',g:'英文釋義',us:'用法',p:'原本的說法'};
+  function pBlank(c){return PFK.filter(function(k){return !String(c[k]||'').trim()})}
+  async function pFillBatch(items){
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var spec={z:'繁體中文意思，簡短',e:'one natural English example sentence that uses the phrase',g:'short English definition',us:'繁體中文，一句用法說明（語氣、場合、常見搭配或句型）',p:'a plain, simpler English way to say the same thing'};
+    var prompt='You help a Traditional Chinese speaker build a notebook of natural English phrases. For each phrase, fill ONLY the fields listed in its "need". Field formats: '+JSON.stringify(spec)+'. '+
+      'Use "known" for context so your answers match the intended meaning. Be accurate; if you are not sure of a field, return an empty string for it rather than guess. '+
+      'Return ONLY a JSON array with no markdown: [{"t":"<phrase exactly as given>","z":"..."}] including only the needed fields. Phrases: '+
+      JSON.stringify(items.map(function(i){return {t:i.t,need:i.need,known:i.cur}}));
+    var res=await sample(prompt,{cache:false,modelTier:'default'});
+    var data=parseJson(res&&res.text);
+    if(!Array.isArray(data))throw {code:'parse'};
+    return data;
+  }
+  async function pBatch(){
+    var todo=[];all().forEach(function(c){var need=pBlank(c);if(need.length)todo.push({c:c,need:need})});
+    if(!todo.length){pbMsg='所有片語的欄位都有內容了，沒有需要補的。';renderDeck();return}
+    pBusy=true;pStop=false;pbMsg='批次補全中… 0 / '+todo.length;renderDeck();
+    var done=0,filled=0,failed=0;
+    try{
+      for(var i=0;i<todo.length&&!pStop;i+=8){
+        var batch=todo.slice(i,i+8);
+        try{
+          var data=await pFillBatch(batch.map(function(t){var c=t.c;return {t:c.t,need:t.need,cur:{z:c.z||'',p:c.p||'',e:c.e||'',r:c.r||''}}}));
+          data.forEach(function(o){
+            var t=batch.filter(function(b){return o&&String(b.c.t).toLowerCase()===String(o.t).toLowerCase()})[0];if(!t)return;
+            var k=String(t.c.t).toLowerCase(),slot=pai[k]||{},n=0;
+            t.need.forEach(function(f){var v=String(o[f]!=null?o[f]:'').trim();if(v&&!slot[f]){slot[f]=v;n++}});
+            if(n){pai[k]=slot;filled++}
+          });
+          save('pai',pai);
+        }catch(err){
+          if(err&&(err.code==='unavailable'||err.code==='not_granted'||err.code==='rate_limited'))throw err;
+          failed+=batch.length;
+        }
+        done+=batch.length;
+        var m=$('#pmsg');if(m)m.textContent='批次補全中… '+Math.min(done,todo.length)+' / '+todo.length;
+      }
+      pbMsg=(pStop?'已停止。':'完成。')+'補了 '+filled+' 個片語'+(failed?'，另有 '+failed+' 個這次沒補成（可再按一次）':'')+'。內容未對照辭典。';
+    }catch(err){pbMsg=(done?'已處理 '+done+' / '+todo.length+'，中途停下：':'')+wErr(err)}
+    pBusy=false;qz=null;renderDeck();
+  }
+  function renderDeck(){
+    var el=$('#p-deck'),a=all();
+    var blankP=a.filter(function(c){return pBlank(c).length}).length;
+    var html='<div class="prompt" style="margin-bottom:14px"><div class="tag red">批次補全</div>'+
+      progBar('片語',a.length,a.map(pBlank),function(k){return {z:'中文意思',e:'例句',g:'英文釋義',us:'用法',p:'原本的說法'}[k]||k})+
+      (pbMsg?'<div class="fb" id="pmsg" style="margin-top:0;margin-bottom:10px" role="status">'+esc(pbMsg)+'</div>':'')+
+      '<div class="row" style="margin-top:0">'+(pBusy?'<button class="btn" type="button" data-pb="stop">停止</button>':'<button class="btn primary" type="button" data-pb="batch"'+(blankP?'':' disabled')+'>一鍵補全</button>')+'</div></div>';
+    html+='<div class="prompt" style="margin-bottom:14px;border-color:var(--red,#c0392b)"><div class="tag red">一鍵查核</div><p class="sm2" style="margin:4px 0 8px">批量對照 Wiktionary；查不到的交給 Claude 判斷。</p><button class="btn primary" type="button" style="width:100%;min-height:48px" data-pb="'+(chkBusy?'chkstop':'check')+'">'+(chkBusy?'停止查核':'一鍵查核')+'</button></div>';
+    html+='<form id="addForm" autocomplete="off"><h2>新增片語（片語庫）</h2>'+
+      '<label for="f-p">原本的說法（黑筆）<input type="text" id="f-p" placeholder="e.g. very strong"></label>'+
+      '<label for="f-t">更道地的說法（紅筆）<input type="text" id="f-t" placeholder="e.g. formidable" required></label>'+
+      '<label for="f-z">中文意思<input type="text" id="f-z" placeholder="e.g. 強大而難應付的"></label>'+
+      '<label for="f-e">例句<input type="text" id="f-e" placeholder="e.g. She is a formidable opponent."></label>'+
+      '<label for="f-alt">同義的其他說法（一行一個，可不填；會跟上面那條併成同一個系列）<textarea id="f-alt" style="min-height:70px" placeholder="by the book&#10;punctiliously"></textarea></label>'+
+      '<label for="f-r">場合<select id="f-r">'+REGS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+      '<button class="btn primary" type="submit">加入片語庫</button>'+(dMsg?'<div class="hint" role="status">'+esc(dMsg)+'</div>':'')+'</form>'+
+      '<div class="list-h">片語庫 · '+a.length+' 個</div><div class="list">';
+    var us=pUnits(),pk=function(s){return String(s||'').toLowerCase().replace(/^[^a-z0-9]+/,'')},cmp=function(a,b){return pk(a).localeCompare(pk(b),'en')};us.forEach(function(u){u.items.sort(function(a,b){return cmp(a.t,b.t)})});us.sort(function(a,b){return cmp(a.items[0].t,b.items[0].t)});var curP='',pc={};us.forEach(function(u){var k=bkL(u.items[0].t);pc[k]=(pc[k]||0)+u.items.length});
+    us.forEach(function(u){var L=bkL(u.items[0].t);if(L!==curP){if(curP)html+='</details>';curP=L;html+=bkHead('p',L,pc[L])}if(u.items.length<2){html+=itemHtml(u.items[0]);return}
+      html+='<div class="ser"><div class="ser-h">系列 · '+esc(u.sn||'同義說法')+'（'+u.items.length+' 種說法）</div>'+u.items.map(itemHtml).join('')+'</div>';
+    });
+    el.innerHTML=html+(curP?'</details>':'')+'</div>';
+  }
+  $('#p-deck').addEventListener('submit',function(e){
+    e.preventDefault();
+    var t=$('#f-t').value.trim();if(!t)return;
+    if(isOneWord(t)&&!$('#f-alt').value.trim()){
+      if(hasWord(t)){dMsg='「'+t+'」已經在單字庫裡了。'}
+      else{var w1=toWord({t:t,z:$('#f-z').value.trim(),p:$('#f-p').value.trim(),e:$('#f-e').value.trim(),r:$('#f-r').value});words.unshift(w1);save('words',words);syncPending(w1);colAdd(w1);renderProg();dMsg='「'+t+'」是單字，已放進單字庫。'}
+      renderDeck();return;
+    }
+    var z=$('#f-z').value.trim(),pp=$('#f-p').value.trim(),ex=$('#f-e').value.trim(),rg=$('#f-r').value;
+    var alts=($('#f-alt').value||'').split(/[\n;；、]+/).map(function(x){return x.trim()}).filter(Boolean);
+    var seenT={};seenT[t.toLowerCase()]=1;
+    alts=alts.filter(function(x){var k=x.toLowerCase();if(seenT[k])return false;seenT[k]=1;return true});
+    var exists=function(x){return all().some(function(c){return c.t.toLowerCase()===x.toLowerCase()})};
+    var ser=alts.length?('u-'+slug(t)):'',sn=alts.length?(z||pp||t):'';
+    var added=0,joined=0;
+    if(!exists(t)){var c0={t:t,z:z,p:pp,e:ex,r:rg};if(ser){c0.ser=ser;c0.sn=sn}custom.push(c0);syncPhr(c0);added++}
+    else if(ser){var m0=custom.filter(function(c){return c.t.toLowerCase()===t.toLowerCase()})[0];if(m0&&!m0.ser){m0.ser=ser;m0.sn=sn;joined++}}
+    alts.forEach(function(x){
+      if(exists(x)){var m=custom.filter(function(c){return c.t.toLowerCase()===x.toLowerCase()})[0];if(m&&!m.ser){m.ser=ser;m.sn=sn;joined++}return}
+      var c1={t:x,z:z,p:pp,e:'',r:rg,ser:ser,sn:sn};custom.push(c1);syncPhr(c1);added++;
+    });
+    dMsg=added?('已加入 '+added+' 個說法'+(alts.length?'，併成一個系列':'')+(joined?'，另有 '+joined+' 個原有說法併入':'')+'。'):(joined?'已把 '+joined+' 個原有說法併入系列。':'這些說法片語庫已經有了。');
+    save('custom',custom);qz=null;renderProg();renderDeck();
+  });
+  $('#p-deck').addEventListener('click',function(e){
+    var pb=e.target.closest('button[data-pb]');
+    if(pb){var act=pb.getAttribute('data-pb');if(act==='check')chkRun('p');else if(act==='chkstop')chkStop=true;else if(act==='batch'&&!pBusy)pBatch();else if(act==='stop')pStop=true;return}
+    var b=e.target.closest('button[data-del]');if(!b)return;
+    var i=+b.getAttribute('data-del'),c=custom[i];if(!c)return;
+    delete known[c.t];delete srs['p:'+c.t.toLowerCase()];custom.splice(i,1);
+    save('custom',custom);save('known',known);save('srs',srs);qz=null;renderProg();renderDeck();
+  });
+
+  /* ---------- knowledge graph (read-only view over words + phrases) ---------- */
+var gs={color:'r',scope:'p',st:{w:{hubs:{lang:true,root:true,sc:true},color:'mast'}},hubs:{ser:true,sc:true},sel:null,focus:'',busy:false,msg:'',grav:9,rep:150,fitPending:true,ticks:0},gsim=null,gpos={},gNodes={},serLab={},gzoom=null,gsvg=null,gnodes=[],gW=0,gH=0,cmCur={};
+var GCFG={
+  p:{hubs:[['ser','同義系列'],['sc','情境']],cols:[['r','場合'],['ty','語言單位'],['cf','難度'],['mast','掌握度']]},
+  w:{hubs:[['lang','字源'],['root','構詞'],['sc','主題']],cols:[['mast','掌握度'],['ty','性質'],['l','來源語言'],['r','場合']]}
+};
+var GHUB=GCFG.p.hubs;
+var GCOL=GCFG.p.cols;
+var GPAL=['#3b78a8','#e08a1e','#3f9b5f','#8a5fc0','#d1477f','#1fb5c9','#8b6b3d','#c9b037'],GOTHER='#7d8794',GNONE='#c3c7cc';
+var GMAST={'新':'#9aa0a6','學習中':'#d98a2b','已掌握':'#4b9a73'};
+var GCEFRO=['A1','A2','B1','B2','C1','C2'],GCEFR={A1:'#d6e6f2',A2:'#b0cfe6',B1:'#86b4d6',B2:'#5b95c2',C1:'#37739f',C2:'#1d4f78'};
+var GSC=['日常生活','旅行與交通','餐飲','職場與商務','科技','學術與研究','醫療健康','情感與人際','自然與環境','文學與藝術','抽象思辨'];
+var GTH=['情感與關係','自然與天候','時間與記憶','光影與聲音','旅行與遠方','文學與藝術','神話與歷史','抽象思辨','日常生活','社會與權力'];
+function gList(){return gs.scope==='w'?GTH:GSC}
+function gLangs(l){return String(l||'').split(/→|->|←/).map(function(x){return gLang(x)}).filter(function(x){return x&&x!=='自行輸入'})}
+function gSwitch(sc){
+  if(sc===gs.scope)return;
+  gs.st[gs.scope]={hubs:gs.hubs,color:gs.color};
+  gs.scope=sc;var st=gs.st[sc];gs.hubs=st.hubs;gs.color=st.color;GHUB=GCFG[sc].hubs;GCOL=GCFG[sc].cols;
+  gs.sel=null;gs.focus='';gs.msg='';renderGraph();
+}
+function gMorph(t){var m=String(t).match(/^(字首|字根|字尾|詞素)\s*([^（(]+)/);return m?m[1]+' '+m[2].trim():''}
+function gEnrich(n){
+  var root=[],ty=[];
+  (n.tg||[]).forEach(function(t){var k=gMorph(t);if(k){if(root.indexOf(k)<0)root.push(k)}else{t=String(t);if(ty.indexOf(t)<0)ty.push(t)}});
+  var c=cls[n.id]||{};
+  n.root=root;n.ty=ty;n.cf=c.cf||'';n.sc=c.sc||[];n.lang=gLangs(n.l);
+}
+function gMeta(n){
+  var h='';
+  if(n.cf||n.sc.length)h+='<div style="margin-top:6px">'+(n.cf?'<span class="chip">難度 '+esc(n.cf)+'</span>':'')+n.sc.map(function(x){return '<span class="chip">'+esc(x)+'</span>'}).join('')+'<span class="sm2"> Claude 推定，未核對</span></div>';
+  if(n.root.length)h+='<div class="sm2" style="margin-top:4px">構詞：'+n.root.map(esc).join('、')+'</div>';
+  return h;
+}
+function gCover(){
+  var el=$('#gmsg');if(!el)return;
+  var it=gItems().filter(function(x){return x.kind===gs.scope}),n=it.length,cf=0,sc=0,rt=0,lg=0;
+  it.forEach(function(x){if(x.cf)cf++;if(x.sc.length)sc++;if(x.root.length)rt++;if(x.lang.length)lg++});
+  el.textContent=gs.msg||(gs.scope==='w'?('資料覆蓋：字源 '+lg+'/'+n+' · 構詞 '+rt+'/'+n+' · 主題 '+sc+'/'+n):('資料覆蓋：情境 '+sc+'/'+n+' · 難度 '+cf+'/'+n));
+}
+async function gClassify(){
+  if(gs.busy)return;
+  var todo=gItems().filter(function(x){return x.kind===gs.scope&&(gs.scope==='w'?!x.sc.length:(!x.cf||!x.sc.length))});
+  if(!todo.length){gs.msg='全部都有難度與情境了。';gCover();setTimeout(function(){gs.msg='';gCover()},5000);return}
+  gs.busy=true;
+  try{
+    if(typeof claude==='undefined'||!claude.use)throw {code:'unavailable'};
+    var sample=await claude.use('sample');
+    if(!sample)throw {code:'unavailable'};
+    var done=0,got=0;
+    for(var i=0;i<todo.length;i+=15){
+      var batch=todo.slice(i,i+15);
+      gs.msg='Claude 推定中… '+done+' / '+todo.length;gCover();
+      var prompt='You are classifying vocabulary for a Traditional Chinese speaker learning English. For each item give: '+
+        '"cf": the CEFR level most learners would place it at, exactly one of A1,A2,B1,B2,C1,C2 (rare, literary, archaic or borrowed words are C2); '+
+        '"sc": one or two scenarios chosen ONLY from this exact list: '+gList().join(', ')+'. '+
+        'Return ONLY a JSON array with no markdown, like [{"id":"<id>","cf":"B2","sc":["職場與商務"]}]. Items: '+
+        JSON.stringify(batch.map(function(x){return {id:x.id,t:x.label,z:(x.item.z||'')}}));
+      var res=await sample(prompt,{cache:false,modelTier:'default'});
+      var data=parseJson(res&&res.text);
+      if(!Array.isArray(data))throw {code:'parse'};
+      data.forEach(function(d){
+        if(!d||!batch.some(function(b){return b.id===d.id}))return;
+        var cf=gs.scope==='p'&&GCEFRO.indexOf(d.cf)>=0?d.cf:'';
+        var sc=(Array.isArray(d.sc)?d.sc:[]).filter(function(z){return gList().indexOf(z)>=0}).slice(0,2);
+        if(!cf&&!sc.length)return;
+        cls[d.id]={cf:cf,sc:sc,at:today()};got++;
+      });
+      save('cls',cls);done+=batch.length;
+    }
+    gs.msg=got?('已推定 '+got+' / '+done+' 筆。這是 Claude 的判斷，不是辭典資料。'):'Claude 沒有回傳可用的分類，請再試一次。';
+  }catch(err){gs.msg=errText(err)}
+  gs.busy=false;gDraw();gDetail();gCover();
+  setTimeout(function(){gs.msg='';gCover()},6000);
+}
+function gLang(s){return String(s||'').split(/[（(]/)[0].trim()}
+function gMast(key){var s=srs[key];if(!s)return '新';return s.b>=4?'已掌握':'學習中'}
+function gWeak(n){if(n.kind==='p'&&known[n.item.t]===false)return true;var s=srs[n.key];return !!(s&&s.b<=1&&s.n>0)}
+function gUnv(n){return n.kind==='p'?!n.item.ck:(!n.item.v&&!n.item.ck)}
+function gItems(){
+  var out=[];serLab={};
+  all().forEach(function(c){
+    var gk=c.ser?'s:'+c.ser:(pk(c)?'p:'+pk(c):'');
+    if(gk){if(c.sn)serLab[gk]=c.sn;else if(!serLab[gk])serLab[gk]=c.p||c.z||gk}
+    out.push({id:'p:'+c.t.toLowerCase(),kind:'p',label:c.t,key:uk(c),r:c.r||'',gk:gk,tg:c.tg||[],l:'',item:c});
+  });
+  words.map(E).forEach(function(x){out.push({id:'w:'+x.w.toLowerCase(),kind:'w',label:x.w,key:'w:'+x.w.toLowerCase(),r:x.r||'',gk:'',tg:x.tg||[],l:x.l||'',item:x})});
+  out.forEach(gEnrich);
+  return out;
+}
+function gHubKeys(n,f){
+  if(f==='ser')return n.gk?[n.gk]:[];
+  if(f==='root')return n.root;
+  if(f==='lang')return n.lang;
+  if(f==='l')return n.l&&gLang(n.l)?[gLang(n.l)]:[];
+  if(f==='sc')return n.sc;
+  return [];
+}
+function gColorKey(n){
+  if(gs.color==='kind')return n.kind==='p'?'片語':'單字';
+  if(gs.color==='mast')return gMast(n.key);
+  if(gs.color==='cf')return n.cf||'';
+  if(gs.color==='ty')return n.ty[0]||'';
+  if(gs.color==='r')return n.r||'';
+  return gLangs(n.l)[0]||'';
+}
+function gColorMap(items){
+  var m={},vs=[];
+  items.forEach(function(n){var v=gColorKey(n);if(v&&vs.indexOf(v)<0)vs.push(v)});
+  if(gs.color==='mast'){vs=['新','學習中','已掌握'].filter(function(v){return vs.indexOf(v)>=0});vs.forEach(function(v){m[v]=GMAST[v]});return m}
+  if(gs.color==='cf'){vs=GCEFRO.filter(function(v){return vs.indexOf(v)>=0});vs.forEach(function(v){m[v]=GCEFR[v]});return m}
+  if(gs.color==='kind'){vs=['單字','片語'].filter(function(v){return vs.indexOf(v)>=0})}
+  else vs.sort();
+  var cc={};items.forEach(function(n){var v=gColorKey(n);if(v)cc[v]=(cc[v]||0)+1});
+  if(vs.length>GPAL.length){vs.sort(function(a,b){return cc[b]-cc[a]||(a<b?-1:1)});vs.slice(GPAL.length).forEach(function(v){m[v]=GOTHER});vs=vs.slice(0,GPAL.length)}
+  vs.forEach(function(v,i){m[v]=GPAL[i]});
+  return m;
+}
+function gBuild(){
+  var items=gItems().filter(function(n){return n.kind===gs.scope}),cnt={},labs={},nodes=[],links=[];
+  gNodes={};
+  GHUB.forEach(function(h){
+    if(!gs.hubs[h[0]])return;
+    items.forEach(function(n){gHubKeys(n,h[0]).forEach(function(k){var id='h|'+h[0]+'|'+k;cnt[id]=(cnt[id]||0)+1;labs[id]=h[0]==='ser'?(serLab[k]||k):k})});
+  });
+  items.forEach(function(n){n.t='e';nodes.push(n);gNodes[n.id]=n});
+  var made={};
+  items.forEach(function(n){
+    GHUB.forEach(function(h){
+      if(!gs.hubs[h[0]])return;
+      gHubKeys(n,h[0]).forEach(function(k){
+        var id='h|'+h[0]+'|'+k;if(cnt[id]<2)return;
+        if(!made[id]){made[id]={id:id,t:'h',f:h[0],label:labs[id],fl:h[1],members:[]};nodes.push(made[id]);gNodes[id]=made[id]}
+        if(made[id].members.indexOf(n.id)<0){made[id].members.push(n.id);links.push({source:n.id,target:id})}
+      });
+    });
+  });
+  return {items:items,nodes:nodes,links:links};
+}
+function gDraw(){
+  var box=$('#gbox'),svgEl=$('#gsvg');if(!box||!svgEl)return;
+  if(typeof d3==='undefined'){box.innerHTML='<p class="empty" style="padding:20px">圖譜需要載入 d3，目前載入失敗，請重新整理。</p>';return}
+  var W=box.clientWidth||600,H=box.clientHeight||420;
+  var g=gBuild(),nodes=g.nodes,links=g.links,cm=gColorMap(g.items);
+  cmCur=cm;gs.ticks=0;gs.fitPending=true;
+  var svg=d3.select(svgEl).attr('width',W).attr('height',H);
+  svg.selectAll('*').remove();
+  var root=svg.append('g');
+  gzoom=d3.zoom().scaleExtent([.15,3]).on('zoom',function(ev){root.attr('transform',ev.transform)});svg.call(gzoom);gsvg=svg;gnodes=nodes;gW=W;gH=H;
+  svg.on('click',function(){gs.sel=null;gDetail();gMark()});
+  nodes.forEach(function(n){var p=gpos[n.id];if(p){n.x=p.x;n.y=p.y}});
+  var adj={};nodes.forEach(function(n){adj[n.id]={};adj[n.id][n.id]=1});
+  links.forEach(function(l){adj[l.source][l.target]=1;adj[l.target][l.source]=1});
+  var link=root.append('g').selectAll('line').data(links).join('line').attr('class','gl');
+  var node=root.append('g').selectAll('g').data(nodes).join('g').attr('class',function(d){return 'gn '+d.t})
+    .on('click',function(ev,d){ev.stopPropagation();gs.sel=d.id;gDetail();gMark()});
+  node.each(function(d){
+    var s=d3.select(this);
+    if(d.t==='e'){
+      var weak=gWeak(d),col=cm[gColorKey(d)]||GNONE;
+      s.append('circle').attr('class','gring').attr('r',weak?17:13);
+      if(weak)s.append('circle').attr('r',11).attr('fill','none').attr('stroke','var(--red)').attr('stroke-width',2.5);
+      var unv=gUnv(d);
+      s.append('circle').attr('r',7).attr('fill',unv?'var(--paper2)':col).attr('stroke',unv?col:'var(--paper2)').attr('stroke-width',unv?2.5:1.5);
+      s.append('text').attr('dx',weak?15:11).attr('dy',4).text(d.label);
+    }else{
+      s.append('rect').attr('class','gring').attr('x',-14).attr('y',-14).attr('width',28).attr('height',28).attr('rx',7);
+      s.append('rect').attr('x',-9).attr('y',-9).attr('width',18).attr('height',18).attr('rx',4).attr('fill','var(--paper)').attr('stroke','var(--ink2)').attr('stroke-width',1.5);
+      s.append('text').attr('dx',13).attr('dy',4).text(d.label);
+    }
+  });
+  node.on('mouseover',function(ev,d){var a=adj[d.id];node.classed('gdim',function(n){return !a[n.id]});link.classed('gdim',function(l){return !(l.source.id===d.id||l.target.id===d.id)})})
+      .on('mouseout',function(){node.classed('gdim',false);link.classed('gdim',false)});
+  if(gsim)gsim.stop();
+  gsim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(function(d){return d.id}).distance(70).strength(.5))
+    .force('charge',d3.forceManyBody().strength(-gs.rep))
+    .force('x',d3.forceX(W/2).strength(gs.grav/100))
+    .force('y',d3.forceY(H/2).strength(gs.grav/100))
+    .force('collide',d3.forceCollide(function(d){return d.t==='h'?24:17}));
+  gsim.on('tick',function(){
+    link.attr('x1',function(d){return d.source.x}).attr('y1',function(d){return d.source.y}).attr('x2',function(d){return d.target.x}).attr('y2',function(d){return d.target.y});
+    node.attr('transform',function(d){return 'translate('+d.x+','+d.y+')'});
+    nodes.forEach(function(n){gpos[n.id]={x:n.x,y:n.y}});
+    if(gs.fitPending&&++gs.ticks===60)gFit();
+  });
+  node.call(d3.drag()
+    .on('start',function(ev,d){if(!ev.active)gsim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y})
+    .on('drag',function(ev,d){d.fx=ev.x;d.fy=ev.y})
+    .on('end',function(ev,d){if(!ev.active)gsim.alphaTarget(0);d.fx=null;d.fy=null}));
+  gMark();
+  gsim.on('end',function(){if(gs.fitPending){gs.fitPending=false;gFit()}});
+  var cn={},oth=0,othK=0,noneN=0,lg='';
+  g.items.forEach(function(n){var v=gColorKey(n);if(v)cn[v]=(cn[v]||0)+1;else noneN++});
+  Object.keys(cm).forEach(function(v){
+    if(cm[v]===GOTHER&&gs.color!=='mast'){oth+=cn[v]||0;othK++;return}
+    lg+='<span class="glg'+(gs.focus===v?' on':'')+'" data-gleg="'+esc(v)+'"><i style="background:'+cm[v]+'"></i>'+esc(v)+' '+(cn[v]||0)+'</span>';
+  });
+  if(othK)lg+='<span class="glg'+(gs.focus==='__other'?' on':'')+'" data-gleg="__other"><i style="background:'+GOTHER+'"></i>其他（'+othK+' 種）'+oth+'</span>';
+  if(noneN)lg+='<span class="glg'+(gs.focus==='__none'?' on':'')+'" data-gleg="__none"><i style="background:'+GNONE+'"></i>（無資料）'+noneN+'</span>';
+  gFocus();
+  $('#gleg').innerHTML='<span>顏色＝'+esc((GCOL.filter(function(c){return c[0]===gs.color})[0]||[])[1]||'')+'：</span>'+lg+
+    '<span>◼ 方塊＝分類（成員 ≥ 2 才出現）　紅圈＝待加強　空心圓＝尚未核對　點圖例或方塊可單獨標出該組</span>';
+}
+function gMatch(n){var k=gColorKey(n);if(gs.focus==='__none')return !k;if(gs.focus==='__other')return !!k&&cmCur[k]===GOTHER;return k===gs.focus}
+function gFaded(d){
+  var sh=gs.sel&&gNodes[gs.sel];
+  if(sh&&sh.t==='h'&&d.id!==sh.id&&sh.members.indexOf(d.id)<0)return true;
+  if(!gs.focus)return false;
+  if(d.t==='e')return !gMatch(d);
+  return !d.members.some(function(id){return gMatch(gNodes[id])});
+}
+function gFocus(){
+  if(typeof d3==='undefined')return;
+  d3.selectAll('#gsvg g.gn').classed('gfade',function(d){return gFaded(d)});
+  d3.selectAll('#gsvg line.gl').classed('gfade',function(l){return gFaded(l.source)||gFaded(l.target)});
+}
+function gFit(){
+  if(!gsvg||!gzoom||!gnodes.length)return;
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  gnodes.forEach(function(n){if(n.x<x0)x0=n.x;if(n.x>x1)x1=n.x;if(n.y<y0)y0=n.y;if(n.y>y1)y1=n.y});
+  if(!isFinite(x0)||!isFinite(y0))return;
+  var w=(x1-x0)+160,h=(y1-y0)+90;
+  var k=Math.max(.15,Math.min(1.6,Math.min(gW/w,gH/h)));
+  var cx=(x0+x1)/2+30,cy=(y0+y1)/2;
+  gsvg.transition().duration(450).call(gzoom.transform,d3.zoomIdentity.translate(gW/2-k*cx,gH/2-k*cy).scale(k));
+}
+function gMark(){if(typeof d3==='undefined')return;d3.selectAll('#gsvg g.gn').classed('sel',function(d){return d.id===gs.sel});gFocus()}
+function gDetail(){
+  var el=$('#gdetail');if(!el)return;
+  var n=gs.sel&&gNodes[gs.sel];
+  if(!n){el.innerHTML='<p class="sm2">點圓點看內容，點方塊看這個分類裡有誰。換「顏色依」或勾選不同樞紐，可以從不同面向看同一批詞。</p>';return}
+  if(n.t==='h'){
+    el.innerHTML='<div class="ib"><div class="tag ink">'+esc(n.fl)+'</div><div class="ib-p">'+esc(n.label)+'</div><p class="sm2" style="margin:4px 0">'+n.members.length+' 個成員</p>'+
+      n.members.map(function(id){var m=gNodes[id];return m?'<span class="chip pk'+(gWeak(m)?' on':'')+'" data-gsel="'+esc(id)+'">'+esc(m.label)+'</span>':''}).join('')+'</div>';
+    return;
+  }
+  var it=n.item,st=gMast(n.key)+(gWeak(n)?' · 待加強':'')+(gUnv(n)?' · 尚未核對':'');
+  if(n.kind==='p'){
+    el.innerHTML='<div class="ib"><div class="tag ink">片語 · '+esc(it.r||'')+' · '+esc(st)+'</div><div class="ib-p" style="color:var(--red)">'+esc(it.t)+'</div>'+
+      '<div class="zh">'+esc(it.z||'')+'</div>'+(it.p?'<div class="sm2">原本的說法：'+esc(it.p)+'</div>':'')+
+      (it.e?'<div class="ex">'+hl(it)+'</div>':'')+gMeta(n)+sibTag(it)+pTag(it)+'</div>';
+  }else{
+    el.innerHTML='<div class="ib"><div class="tag ink">單字 · '+esc(it.l||'')+' · '+esc(st)+'</div><div class="ib-p" style="color:var(--red)">'+esc(it.w)+'</div><div class="sm2">'+pron(it)+'</div>'+
+      '<div class="zh">'+esc(it.z||'')+'</div><div class="sm2">'+esc(it.g||'')+'</div>'+(it.e?'<div class="ex" style="font-style:italic">'+esc(it.e)+'</div>':'')+gMeta(n)+tgHtml(it.tg)+wDetail(it)+'</div>';
+  }
+}
+function renderGraph(){
+  var el=$('#p-graph');
+  var opts=GCOL.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===gs.color?' selected':'')+'>'+c[1]+'</option>'}).join('');
+  var cks=GHUB.map(function(h){return '<label><input type="checkbox" data-ghub="'+h[0]+'"'+(gs.hubs[h[0]]?' checked':'')+'> '+h[1]+'</label>'}).join('');
+  el.innerHTML='<div class="seg" role="group" aria-label="圖譜範圍"><button data-gscope="p" aria-pressed="'+(gs.scope==='p')+'">片語圖譜</button><button data-gscope="w" aria-pressed="'+(gs.scope==='w')+'">單字圖譜</button></div>'+
+    '<div class="gbar"><label>顏色依 <select id="gcol">'+opts+'</select></label><span>分類方塊：</span>'+cks+'</div>'+
+    '<div class="gbar"><label>引力 <input type="range" id="ggrav" min="0" max="40" value="'+gs.grav+'"></label><label>斥力 <input type="range" id="grep" min="40" max="400" value="'+gs.rep+'"></label><button class="btn sm" id="gfit" type="button">全覽</button><button class="btn sm" id="gcls" type="button">補難度與情境</button><span id="gmsg" class="sm2"></span></div>'+
+    '<div id="gbox"><svg id="gsvg"></svg></div><div class="gleg" id="gleg"></div><div id="gdetail"></div>';
+  gDraw();gDetail();gCover();
+}
+$('#p-graph').addEventListener('change',function(e){
+  if(e.target.id==='gcol'){gs.color=e.target.value;gs.focus='';gDraw();gDetail()}
+  else if(e.target.getAttribute('data-ghub')){gs.hubs[e.target.getAttribute('data-ghub')]=e.target.checked;gs.sel=null;gDraw();gDetail()}
+});
+$('#p-graph').addEventListener('click',function(e){
+  var c=e.target.closest('[data-gsel]');if(c){gs.sel=c.getAttribute('data-gsel');gDetail();gMark()}
+});
+$('#p-graph').addEventListener('input',function(e){
+  if(e.target.id!=='ggrav'&&e.target.id!=='grep')return;
+  gs.grav=+$('#ggrav').value;gs.rep=+$('#grep').value;
+  if(gsim){gsim.force('x').strength(gs.grav/100);gsim.force('y').strength(gs.grav/100);gsim.force('charge').strength(-gs.rep);gs.fitPending=true;gs.ticks=0;gsim.alpha(.7).restart()}
+});
+$('#p-graph').addEventListener('click',function(e){
+  var sp=e.target.closest('[data-gscope]');if(sp){gSwitch(sp.getAttribute('data-gscope'));return}
+  if(e.target.closest('#gfit')){gFit();return}
+  if(e.target.closest('#gcls')){gClassify();return}
+  var lg=e.target.closest('[data-gleg]');
+  if(lg){var v=lg.getAttribute('data-gleg');gs.focus=gs.focus===v?'':v;document.querySelectorAll('#gleg .glg').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-gleg')===gs.focus)});gFocus()}
+});
+window.addEventListener('resize',function(){if(cur==='graph')gDraw()});
+
+/* ---------- start ---------- */
+  initState();
+  renderProg();show('today');loadDb();
+})();
+</script>
+</body>
+</html>

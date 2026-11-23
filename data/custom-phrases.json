@@ -1,0 +1,422 @@
+[
+ {
+  "t": "Are you certain?",
+  "z": "你確定嗎？",
+  "p": "Are you sure",
+  "r": "通用",
+  "e": "Are you certain the figures are accurate before we send them out?"
+ },
+ {
+  "t": "Are you positive?",
+  "z": "你百分之百確定嗎？",
+  "p": "Are you sure",
+  "r": "口語",
+  "e": "Are you positive you locked the door?"
+ },
+ {
+  "t": "As far as I can remember",
+  "z": "就我所記得的",
+  "p": "If I remember it right",
+  "r": "口語",
+  "e": "As far as I can remember, he never submitted the final report."
+ },
+ {
+  "t": "At the eleventh hour",
+  "z": "",
+  "p": "At the very least last possible moment",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "Based on my initial impression",
+  "z": "根據我的初步印象",
+  "p": "Off the top of my head",
+  "r": "學術",
+  "e": "Based on my initial impression, the results appear consistent with the earlier study."
+ },
+ {
+  "t": "Based on my initial recollection",
+  "z": "根據我最初的印象",
+  "p": "Off the top of my head",
+  "r": "學術",
+  "e": "Based on my initial recollection, the study was published in 2018, but I will verify that."
+ },
+ {
+  "t": "bide one's time",
+  "z": "靜待時機、伺機而動",
+  "p": "wait it out",
+  "r": "通用",
+  "e": "She kept quiet in the meeting and bided her time until the budget came up."
+ },
+ {
+  "t": "Blow some steam out",
+  "z": "發洩情緒、紓解壓力（標準說法 blow off steam）",
+  "p": "Relieve some stress",
+  "r": "口語",
+  "e": "I went for a run after the meeting to blow off some steam."
+ },
+ {
+  "t": "by the book",
+  "z": "照規矩來、按規定辦事",
+  "p": "Precisely",
+  "r": "商務",
+  "e": "The inspector did everything by the book, so no one could challenge the result."
+ },
+ {
+  "t": "Call the shots",
+  "z": "做決定、發號施令",
+  "p": "To be the person in charge who makes the decision",
+  "r": "口語",
+  "e": "At home, my sister calls the shots when it comes to what we watch."
+ },
+ {
+  "t": "Can you confirm that?",
+  "z": "你可以確認一下嗎？",
+  "p": "Are you sure",
+  "r": "商務",
+  "e": "Can you confirm that the shipment arrived on Monday?"
+ },
+ {
+  "t": "Candidly",
+  "z": "坦率地說",
+  "p": "To be honest",
+  "r": "商務",
+  "e": "Candidly, I think our timeline is too aggressive given the current resources."
+ },
+ {
+  "t": "Could you elaborate on that?",
+  "z": "",
+  "p": "I don’t get the point",
+  "r": "商務",
+  "e": ""
+ },
+ {
+  "t": "Could you walk me through what happened?",
+  "z": "可以請你說明一下事情經過嗎？",
+  "p": "What happened",
+  "r": "商務",
+  "e": "Could you walk me through what happened during the client call?"
+ },
+ {
+  "t": "Develop a thick skin",
+  "z": "臉皮變厚、不再輕易被批評傷到",
+  "p": "Learning not to be easily hurt by other’s word",
+  "r": "通用",
+  "e": "If you want to work in sales, you'll need to develop a thick skin."
+ },
+ {
+  "t": "Do you really think so?",
+  "z": "你真的這麼認為嗎？",
+  "p": "Are you sure",
+  "r": "口語",
+  "e": "Do you really think so? I had a different impression."
+ },
+ {
+  "t": "fall flat",
+  "z": "效果不彰、沒引起預期反應",
+  "p": "misfire",
+  "r": "口語",
+  "e": "His joke fell flat because nobody understood the reference."
+ },
+ {
+  "t": "fizzle out",
+  "z": "逐漸消退、不了了之",
+  "p": "misfire",
+  "r": "口語",
+  "e": "The excitement around the new app fizzled out after a few weeks."
+ },
+ {
+  "t": "flop",
+  "z": "（作品、計畫）徹底失敗",
+  "p": "misfire",
+  "r": "口語",
+  "e": "The new app flopped within a month because nobody wanted to pay for it."
+ },
+ {
+  "t": "Frankly speaking",
+  "z": "坦白說",
+  "p": "To be honest",
+  "r": "商務",
+  "e": "Frankly speaking, the proposal needs more work before we can present it to the client."
+ },
+ {
+  "t": "furnish",
+  "z": "提供、供給（較正式）",
+  "p": "To provide",
+  "r": "商務",
+  "e": "The company will furnish all participants with the necessary materials."
+ },
+ {
+  "t": "get you set up with",
+  "z": "幫你備妥／開通／安排好…",
+  "p": "To provide",
+  "r": "商務",
+  "e": "I'll get you set up with a laptop and an email account today."
+ },
+ {
+  "t": "Go toe-to-toe with",
+  "z": "正面交鋒、面對面較量",
+  "p": "Compete directly with",
+  "r": "通用",
+  "e": "The startup is ready to go toe-to-toe with the industry leaders."
+ },
+ {
+  "t": "Grounded",
+  "z": "踏實、腳踏實地、情緒穩定不浮誇",
+  "p": "Humble and realistic",
+  "r": "通用",
+  "e": "Despite his fame, he has stayed remarkably grounded."
+ },
+ {
+  "t": "late bloomer",
+  "z": "大器晚成的人",
+  "p": "A person who becomes successful later than other people",
+  "r": "口語",
+  "e": "She didn't publish her first novel until fifty, but she turned out to be a real late bloomer."
+ },
+ {
+  "t": "hold one's fire",
+  "z": "先不開火、按兵不動",
+  "p": "wait it out",
+  "r": "口語",
+  "e": "I'm going to hold my fire on criticizing the plan until I've seen the numbers."
+ },
+ {
+  "t": "I completely forgot",
+  "z": "我完全忘記了",
+  "p": "I forgot",
+  "r": "通用",
+  "e": "I completely forgot to reply to your email."
+ },
+ {
+  "t": "I have some reservation about that",
+  "z": "",
+  "p": "I don’t agree",
+  "r": "商務",
+  "e": ""
+ },
+ {
+  "t": "I overlooked it",
+  "z": "我疏忽了",
+  "p": "I forgot",
+  "r": "商務",
+  "e": "I overlooked it in the earlier review, and I apologize."
+ },
+ {
+  "t": "I require a momentary recess",
+  "z": "我需要暫停一下（極為正式，口語不自然）",
+  "p": "I need a break",
+  "r": "口語",
+  "e": "Can we pause for a minute? I need a quick breather."
+ },
+ {
+  "t": "I wholeheartedly agree",
+  "z": "我完全同意",
+  "p": "I agree",
+  "r": "口語",
+  "e": "I wholeheartedly agree with your plan to move the launch to January."
+ },
+ {
+  "t": "If I could just interject for a moment",
+  "z": "",
+  "p": "Wait, could I interrupt?",
+  "r": "商務",
+  "e": ""
+ },
+ {
+  "t": "If I recall correctly",
+  "z": "如果我沒記錯的話",
+  "p": "Off the top of my head",
+  "r": "通用",
+  "e": "If I recall correctly, the contract expires at the end of March."
+ },
+ {
+  "t": "If I'm not mistaken",
+  "z": "如果我沒搞錯的話",
+  "p": "If I remember it right",
+  "r": "通用",
+  "e": "If I'm not mistaken, the meeting starts at three."
+ },
+ {
+  "t": "If memory serves",
+  "z": "如果我記憶無誤",
+  "p": "If I remember it right",
+  "r": "通用",
+  "e": "If memory serves, we met at the conference in Singapore two years ago."
+ },
+ {
+  "t": "In all honesty",
+  "z": "老實說",
+  "p": "To be honest",
+  "r": "通用",
+  "e": "In all honesty, I would have chosen a different approach to the problem."
+ },
+ {
+  "t": "It escaped my attention",
+  "z": "我沒有注意到這件事",
+  "p": "I forgot",
+  "r": "學術",
+  "e": "That detail escaped my attention during the initial analysis."
+ },
+ {
+  "t": "It slipped my mind",
+  "z": "我一時忘了",
+  "p": "I forgot",
+  "r": "口語",
+  "e": "Sorry, it slipped my mind that the meeting was moved."
+ },
+ {
+  "t": "It’s really surreal",
+  "z": "太不真實了、像夢一樣",
+  "p": "It feels like a dream",
+  "r": "口語",
+  "e": "Standing on the stage after years of practice, it's really surreal."
+ },
+ {
+  "t": "Jump the gun",
+  "z": "操之過急、搶先行動",
+  "p": "To act to soon before thinking carefully",
+  "r": "口語",
+  "e": "We jumped the gun by announcing the launch before legal had signed off."
+ },
+ {
+  "t": "Let's arrange a checkpoint call",
+  "z": "我們安排一通進度確認的電話吧",
+  "p": "Let's touch the base",
+  "r": "商務",
+  "e": "Let's arrange a checkpoint call on Friday to review where we stand."
+ },
+ {
+  "t": "No cap",
+  "z": "沒騙你、說真的（網路／年輕人俚語）",
+  "p": "Be honest",
+  "r": "口語",
+  "e": "That concert was the best I've ever seen, no cap."
+ },
+ {
+  "t": "Offhand, I can't say for sure",
+  "z": "一時之間我無法確定",
+  "p": "Off the top of my head",
+  "r": "口語",
+  "e": "Offhand, I can't say for sure how many attendees we had last year."
+ },
+ {
+  "t": "On god",
+  "z": "我發誓、真的沒騙你（網路俚語）",
+  "p": "Be honest",
+  "r": "口語",
+  "e": "I finished the whole project in one night, on god."
+ },
+ {
+  "t": "One of things I wanna reflect on",
+  "z": "",
+  "p": "One of things I wanna think carefully about",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "punctiliously",
+  "z": "一絲不苟地、拘泥細節地",
+  "p": "Precisely",
+  "r": "學術",
+  "e": "She punctiliously recorded every expense in the ledger."
+ },
+ {
+  "t": "Sit on the fence",
+  "z": "騎牆、觀望不表態",
+  "p": "To avoid to make a decision",
+  "r": "口語",
+  "e": "Stop sitting on the fence and tell us which option you prefer."
+ },
+ {
+  "t": "sit tight",
+  "z": "按兵不動、稍安勿躁",
+  "p": "wait it out",
+  "r": "口語",
+  "e": "Just sit tight while I check with the finance team."
+ },
+ {
+  "t": "State of mind",
+  "z": "心理狀態、心情",
+  "p": "The way of thinking",
+  "r": "通用",
+  "e": "I wasn't in the right state of mind to make such a big decision."
+ },
+ {
+  "t": "Stop capping",
+  "z": "別騙了",
+  "p": "Stop lying",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "The initiative is progressing as planned",
+  "z": "一切照著計劃走",
+  "p": "It's going smoothly",
+  "r": "商務",
+  "e": ""
+ },
+ {
+  "t": "The people you look up to",
+  "z": "你崇拜仰慕的人",
+  "p": "Th people you admire and respect",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "They stressed me out",
+  "z": "讓某人壓力很大、緊張焦慮",
+  "p": "They made me feel stressed and worried",
+  "r": "口語",
+  "e": "The constant deadline changes really stressed me out last week."
+ },
+ {
+  "t": "To the letter",
+  "z": "完全照字面、絲毫不差地",
+  "p": "Precisely",
+  "r": "通用",
+  "e": "The contractor followed the safety instructions to the letter."
+ },
+ {
+  "t": "We are exploring the feasibility of implementing X",
+  "z": "我們在思考是否要嘗試X",
+  "p": "We're thinking of doing X",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "We need to reach a consensus",
+  "z": "",
+  "p": "We need to decide together",
+  "r": "口語",
+  "e": ""
+ },
+ {
+  "t": "What occurred?",
+  "z": "發生了什麼事？",
+  "p": "What happened",
+  "r": "學術",
+  "e": "The report examines what occurred during the first phase of the experiment."
+ },
+ {
+  "t": "What's going on?",
+  "z": "發生什麼事了？",
+  "p": "What happened",
+  "r": "口語",
+  "e": "What's going on? Why is everyone standing outside?"
+ },
+ {
+  "t": "What went wrong?",
+  "z": "哪裡出了問題？",
+  "p": "What happened",
+  "r": "商務",
+  "e": "What went wrong with the deployment last night?"
+ },
+ {
+  "t": "Without checking the numbers",
+  "z": "沒有核對數字的情況下",
+  "p": "Off the top of my head",
+  "r": "商務",
+  "e": "Without checking the numbers, I'd estimate we're about 10% over budget."
+ }
+]
