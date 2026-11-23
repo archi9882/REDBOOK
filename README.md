@@ -42,3 +42,7 @@
 ## 完整備份（匯出按鈕）
 
 `app/red-pen-notebook-export.html` 是在原版上多一顆「匯出備份 JSON」按鈕的版本（已同步到 artifact）。按下後會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/` 即可。`app/red-pen-notebook.html` 保持原版。
+
+## 完整備份檔
+
+`data/backup/redbook-backup-2026-11-23.json` 是按鈕匯出的完整資料（etym 92、phr 130、rec 44、pending 92、col 171、state 8，含 `u` 與每日備份）。這份才是完整備份；上面的 `words-*.jsonl` 等檔案是較早的手動整理版，可供閱讀。
