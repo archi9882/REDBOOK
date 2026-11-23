@@ -46,3 +46,8 @@
 ## 完整備份檔
 
 `data/backup/redbook-backup-2026-11-23.json` 是按鈕匯出的完整資料（etym 92、phr 130、rec 44、pending 92、col 171、state 8，含 `u` 與每日備份）。這份才是完整備份；上面的 `words-*.jsonl` 等檔案是較早的手動整理版，可供閱讀。
+
+## 空白版（可轉移）
+
+`app/red-pen-notebook-blank.html` 不含任何個人資料，只有內建範例單字與片語庫，另外多一顆「匯入備份 JSON」。
+使用方式：把這個 HTML 發布成自己的 artifact → 宣告 `db`（`etym` 路徑 read: view / write: admin）、`sample`、`downloads` 三項能力 → 開啟後按「匯入備份 JSON」選擇備份檔，即可把資料還原到自己的資料庫。每個人的資料各自存在自己的 artifact，互不相通。
