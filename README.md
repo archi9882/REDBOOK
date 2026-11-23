@@ -38,3 +38,7 @@
 
 > 這是 2026-11-23 的快照，不會自動同步；artifact 資料庫仍是資料來源。
 > 未收錄：`etym` 詞條庫、`rec`、AI 補充說明（`pai`）、每日備份（`state/bak-*`）、標註與分類（`cls`）。
+
+## 完整備份（匯出按鈕）
+
+`app/red-pen-notebook-export.html` 是在原版上多一顆「匯出備份 JSON」按鈕的版本（已同步到 artifact）。按下後會把 `etym`、`phr`、`rec`、`pending`、`col`、`state`（含每日備份）六個集合原封不動匯出成一個 JSON 檔，再放進 `data/` 即可。`app/red-pen-notebook.html` 保持原版。
